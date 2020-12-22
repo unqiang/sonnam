@@ -28,9 +28,9 @@ defmodule Sonnam.EtaQueue.Client do
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  @spec new_job(atom(), String.t(), integer()) :: {:ok, term()}
-  def new_job(name, job_id, eta) do
-    bucket = to_string(name) <> Base.gen_bucket(eta)
+  @spec new_job(atom(), String.t(), String.t(), integer()) :: {:ok, term()}
+  def new_job(name, svc, job_id, eta) do
+    bucket ="#{svc}-#{Base.gen_bucket(eta)}"
 
     # check bucket exists
     Redix.command(name, ["EXISTS", bucket])
@@ -43,5 +43,4 @@ defmodule Sonnam.EtaQueue.Client do
         Redix.pipeline(name, [["ZADD", bucket, eta, job_id], ["EXPIRE", bucket, 86400]])
     end
   end
-
 end

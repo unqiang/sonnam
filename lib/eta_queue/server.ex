@@ -7,6 +7,7 @@ defmodule Sonnam.EtaQueue.Server do
 
   @type eta_server_opts :: [
           job_handler: atom(),
+          svc: String.t(),
           name: atom(),
           host: String.t(),
           port: integer(),
@@ -23,24 +24,25 @@ defmodule Sonnam.EtaQueue.Server do
   @impl true
   def init(args) do
     {handler, args} = Keyword.pop(args, :job_handler)
+    {svc, args} = Keyword.pop(args, :svc)
     name = Keyword.get(args, :name)
 
     children = [
       {Redix, args},
-      {Task, fn -> loop(name, handler) end}
+      {Task, fn -> loop(name, svc, handler) end}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  def loop(name, handler) do
+  defp loop(name, svc, handler) do
     now_ts = Sonnam.Utils.TimeUtil.timestamp()
 
     now_bucket =
       now_ts
       |> Sonnam.EtaQueue.Base.gen_bucket()
 
-    bucket = to_string(name) <> now_bucket
+    bucket ="#{svc}-#{now_bucket}"
 
     # 懒惰的我不想加锁
     Redix.command(name, ["EXISTS", bucket])
@@ -51,12 +53,12 @@ defmodule Sonnam.EtaQueue.Server do
         apply(handler, :process, [job_id_list])
 
         Process.sleep(1000)
-        loop(name, handler)
+        loop(name, svc, handler)
 
       _ ->
         # no job now
         Process.sleep(10000)
-        loop(name, handler)
+        loop(name, svc, handler)
     end
   end
 end

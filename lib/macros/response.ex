@@ -16,6 +16,7 @@ defmodule Sonnam.Macros.Response do
   defmacro reply_err(conn, msg, code \\ 500) do
     quote bind_quoted: [conn: conn, msg: msg, code: code] do
       json(conn, %{code: code, data: msg})
+      halt(conn)
     end
   end
 end
