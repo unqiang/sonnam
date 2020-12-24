@@ -24,7 +24,8 @@ defmodule Sonnam.Webrpc.Client do
            {"User-Agent", "icewine"},
            {"Connection", "keep-alive"},
            {"Content-Type", "application/json"},
-           {"Current_uid", Keyword.get(extra, :uid, "NA")}
+           {"Current-Uid", Keyword.get(extra, :uid, "NA")},
+           {"Request-From", Keyword.get(extra, :request_from, "NA")}
          ],
          {:ok, encoded_args} <- Jason.encode(args),
          {:ok, response} <-
