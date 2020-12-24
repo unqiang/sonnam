@@ -42,7 +42,7 @@ defmodule Sonnam.EtaQueue.Server do
       now_ts
       |> Sonnam.EtaQueue.Base.gen_bucket()
 
-    bucket ="#{svc}-#{now_bucket}"
+    bucket = "#{svc}-#{now_bucket}"
 
     # 懒惰的我不想加锁
     Redix.command(name, ["EXISTS", bucket])

@@ -30,7 +30,7 @@ defmodule Sonnam.EtaQueue.Client do
 
   @spec new_job(atom(), String.t(), String.t(), integer()) :: {:ok, term()}
   def new_job(name, svc, job_id, eta) do
-    bucket ="#{svc}-#{Base.gen_bucket(eta)}"
+    bucket = "#{svc}-#{Base.gen_bucket(eta)}"
 
     # check bucket exists
     Redix.command(name, ["EXISTS", bucket])

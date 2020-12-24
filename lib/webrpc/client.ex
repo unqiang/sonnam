@@ -28,12 +28,13 @@ defmodule Sonnam.Webrpc.Client do
            {"Request-From", Keyword.get(extra, :request_from, "NA")}
          ],
          {:ok, encoded_args} <- Jason.encode(args),
+         timeout <- Keyword.get(extra, :timeout, 2000),
          {:ok, response} <-
            HTTPoison.post(
              "#{state.base_url}/#{state.service}/#{call}",
              encoded_args,
              headers,
-             recv_timeout: 2000
+             recv_timeout: timeout
            ) do
       {:reply, process(response), state}
     else

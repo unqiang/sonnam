@@ -18,7 +18,6 @@ defmodule Sonnam.Utils.TimeUtil do
   @spec timestamp(atom()) :: integer()
   def timestamp(typ \\ :seconds), do: :os.system_time(typ)
 
-
   @spec now(Calendar.time_zone()) :: DateTime.t()
   def now(tz \\ "Etc/UTC"), do: DateTime.now!(tz)
 
@@ -103,5 +102,4 @@ defmodule Sonnam.Utils.TimeUtil do
     {:ok, datetime, _} = DateTime.from_iso8601(date <> "T" <> time <> "+08:00")
     datetime
   end
-
 end
