@@ -38,16 +38,19 @@ defmodule Sonnam.Webrpc.Client do
            ) do
       {:reply, process(response), state}
     else
-      err -> {:reply, {:error, inspect(err)}, state}
+      err ->
+        Logger.error("remote call error #{inspect(err)}")
+        {:reply, {:error, "webrpc failed"}, state}
     end
   end
 
   defp process(%HTTPoison.Response{body: body, status_code: 200}) do
     body
-    |> Jason.decode!()
+    |> Jason.decode()
     |> (fn
-          %{"code" => 0, "data" => data} -> {:ok, data}
-          %{"code" => _, "data" => data} -> {:error, data}
+          {:ok, %{"code" => 0, "data" => data}} -> {:ok, data}
+          {:ok, %{"code" => _, "data" => data}} -> {:error, data}
+          _ -> {:error, "Internal Server Error"}
         end).()
   end
 
