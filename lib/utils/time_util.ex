@@ -21,6 +21,12 @@ defmodule Sonnam.Utils.TimeUtil do
   @spec now(Calendar.time_zone()) :: DateTime.t()
   def now(tz \\ "Etc/UTC"), do: DateTime.now!(tz)
 
+  @spec china_now() :: DateTime.t()
+  def china_now(), do: now("Asia/Shanghai")
+
+  @spec china_now_str() :: String.t()
+  def china_now_str(), do: china_now() |> datetime_to_str()
+
   @doc """
   convert timestamp to time string
 
@@ -34,24 +40,10 @@ defmodule Sonnam.Utils.TimeUtil do
   """
   @spec ts_to_str(integer(), Calendar.time_zone()) :: String.t()
   def ts_to_str(ts, tz \\ "Asia/Shanghai") do
-    {:ok, datetime} =
-      DateTime.from_unix!(ts)
-      |> DateTime.shift_zone(tz)
-
-    # date
-    date =
-      [datetime.year, datetime.month, datetime.day]
-      |> Enum.map(&to_string(&1))
-      |> Enum.map(&String.pad_leading(&1, 2, "0"))
-      |> Enum.join("-")
-
-    time =
-      [datetime.hour, datetime.minute, datetime.second]
-      |> Enum.map(&to_string(&1))
-      |> Enum.map(&String.pad_leading(&1, 2, "0"))
-      |> Enum.join(":")
-
-    date <> " " <> time
+    ts
+    |> DateTime.from_unix!()
+    |> DateTime.shift_zone!(tz)
+    |> datetime_to_str()
   end
 
   @doc """
@@ -87,6 +79,29 @@ defmodule Sonnam.Utils.TimeUtil do
     datetime
     |> DateTime.shift_zone!("Etc/UTC")
     |> DateTime.to_unix()
+  end
+
+  @doc """
+  convert datetime to timestamp
+
+  * `datetime`     - datetime
+  """
+  @spec datetime_to_str(DateTime.t()) :: String.t()
+  def datetime_to_str(datetime) do
+    # date
+    date =
+      [datetime.year, datetime.month, datetime.day]
+      |> Enum.map(&to_string(&1))
+      |> Enum.map(&String.pad_leading(&1, 2, "0"))
+      |> Enum.join("-")
+
+    time =
+      [datetime.hour, datetime.minute, datetime.second]
+      |> Enum.map(&to_string(&1))
+      |> Enum.map(&String.pad_leading(&1, 2, "0"))
+      |> Enum.join(":")
+
+    date <> " " <> time
   end
 
   @spec china_str_to_datetime(String.t()) :: integer()

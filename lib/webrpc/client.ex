@@ -40,7 +40,7 @@ defmodule Sonnam.Webrpc.Client do
     else
       err ->
         Logger.error("remote call error #{inspect(err)}")
-        {:reply, {:error, "webrpc failed"}, state}
+        {:reply, {:error, "Internal server error"}, state}
     end
   end
 
@@ -50,7 +50,7 @@ defmodule Sonnam.Webrpc.Client do
     |> (fn
           {:ok, %{"code" => 0, "data" => data}} -> {:ok, data}
           {:ok, %{"code" => _, "data" => data}} -> {:error, data}
-          _ -> {:error, "Internal Server Error"}
+          _ -> {:error, "Internal server error"}
         end).()
   end
 
