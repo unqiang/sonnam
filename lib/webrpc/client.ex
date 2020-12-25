@@ -21,11 +21,10 @@ defmodule Sonnam.Webrpc.Client do
 
   def handle_call({:call, call, args, extra}, _, state) do
     with headers <- [
-           {"User-Agent", "icewine"},
-           {"Connection", "keep-alive"},
-           {"Content-Type", "application/json"},
-           {"Current-Uid", Keyword.get(extra, :uid, "NA")},
-           {"Request-From", Keyword.get(extra, :request_from, "NA")}
+           {"connection", "keep-alive"},
+           {"content-type", "application/json"},
+           {"current-uid", Keyword.get(extra, :uid, "NA")},
+           {"x-request-id", Keyword.get(extra, :"x-request-id", "")}
          ],
          {:ok, encoded_args} <- Jason.encode(args),
          timeout <- Keyword.get(extra, :timeout, 2000),
