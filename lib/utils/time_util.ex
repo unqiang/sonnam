@@ -21,6 +21,9 @@ defmodule Sonnam.Utils.TimeUtil do
   @spec now(Calendar.time_zone()) :: DateTime.t()
   def now(tz \\ "Etc/UTC"), do: DateTime.now!(tz)
 
+  def naive_now(typ \\ :second),
+    do: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(typ)
+
   @spec china_now() :: DateTime.t()
   def china_now(), do: now("Asia/Shanghai")
 
@@ -116,5 +119,20 @@ defmodule Sonnam.Utils.TimeUtil do
     [date, time] = String.split(datetime_str)
     {:ok, datetime, _} = DateTime.from_iso8601(date <> "T" <> time <> "+08:00")
     datetime
+  end
+
+  @spec naive_datetime_to_str(NaiveDateTime.t(), Calendar.time_zone()) :: String.t()
+  def naive_datetime_to_str(datetime, tz \\ "Asia/Shanghai") do
+    datetime
+    |> (fn
+          nil ->
+            ""
+
+          dt ->
+            dt
+            |> DateTime.from_naive!("Etc/UTC")
+            |> DateTime.shift_zone!(tz)
+            |> datetime_to_str()
+        end).()
   end
 end
