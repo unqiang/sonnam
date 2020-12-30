@@ -15,11 +15,23 @@ defmodule Sonnam.Webrpc.Client do
   def execute(pid, call, args, extra \\ []),
     do: GenServer.call(pid, {:call, call, args, extra})
 
+  @spec async_execute(atom(), String.t(), keyword(), keyword()) :: :ok
+  def async_execute(pid, call, args, extra \\ []),
+    do: GenServer.cast(pid, {:call, call, args, extra})
+
   def init(base_url: url, service: service) do
     {:ok, %{base_url: url, service: service}}
   end
 
-  def handle_call({:call, call, args, extra}, _, state) do
+  def handle_call({:call, call, args, extra}, _, state),
+    do: {:reply, _call("#{state.base_url}/#{state.service}/#{call}", args, extra), state}
+
+  def handle_cast({:call, call, args, extra}, state) do
+    _call("#{state.base_url}/#{state.service}/#{call}", args, extra)
+    {:noreply, state}
+  end
+
+  defp _call(url, args, extra) do
     with headers <- [
            {"connection", "keep-alive"},
            {"content-type", "application/json"},
@@ -30,16 +42,15 @@ defmodule Sonnam.Webrpc.Client do
          timeout <- Keyword.get(extra, :timeout, 2000),
          {:ok, response} <-
            HTTPoison.post(
-             "#{state.base_url}/#{state.service}/#{call}",
+             url,
              encoded_args,
              headers,
              recv_timeout: timeout
            ) do
-      {:reply, process(response), state}
+      process(response)
     else
-      err ->
-        Logger.error("remote call error #{inspect(err)}")
-        {:reply, {:error, "Internal server error"}, state}
+      _ ->
+        {:error, "Internal server error"}
     end
   end
 

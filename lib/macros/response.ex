@@ -7,11 +7,11 @@ defmodule Sonnam.Macros.Response do
 
   defmacro reply_succ(conn, data) do
     quote bind_quoted: [conn: conn, data: data] do
-      json(conn, %{code: 0, data: data})
+      json(conn, %{code: 200, data: data})
     end
   end
 
-  defmacro reply_err(conn, msg \\ "Internal Server Error", code \\ 500) do
+  defmacro reply_err(conn, msg \\ "Internal server error", code \\ 500) do
     quote bind_quoted: [conn: conn, msg: msg, code: code] do
       json(conn, %{code: code, data: msg})
     end
