@@ -59,7 +59,7 @@ defmodule Sonnam.Webrpc.Client do
     |> Jason.decode()
     |> (fn
           {:ok, %{"code" => 0, "data" => data}} -> {:ok, data}
-          {:ok, %{"code" => _, "data" => data}} -> {:error, data}
+          {:ok, %{"code" => _, "msg" => msg}} -> {:error, msg}
           _ -> {:error, "Internal server error"}
         end).()
   end
