@@ -3,7 +3,6 @@ defmodule Sonnam.Webrpc.Client do
   remote call process with microservices
   """
   use GenServer
-  require Logger
 
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
