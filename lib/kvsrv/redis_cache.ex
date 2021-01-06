@@ -38,77 +38,27 @@ defmodule Sonnam.Kvsrv.RedisCache do
 
   @impl true
   def init(args) do
-    children = [
-      {Redix, args}
+    {name, args} = Keyword.pop(args, :name, :cache)
+
+    pool_opts = [
+      name: {:local, name},
+      worker_module: Redix,
+      size: 10,
+      max_overflow: 5
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    children = [
+      :poolboy.child_spec(name, pool_opts, args)
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one, name: __MODULE__)
   end
 
-  #### cache part ####
-
-  @doc """
-  add a new cache key/value
-
-  * `name` - cache service name, genserver name
-  * `key`  - key of cache
-  * `value` - value of cache
-  * `expire` - how many seconds this cache pair can survive
-
-  ## Examples
-
-  iex> Sonnam.Kvsrv.RedisCache.put(:cache, "foo", "bar", 5)
-  {:ok, "OK"}
-  """
-  def put(name, key, value, expire) do
-    Redix.command(name, ["SETEX", key, expire, value])
+  def command(command) do
+    :poolboy.transaction(:cache, &Redix.command(&1, command))
   end
 
-  @doc """
-  get cache value by key
-
-  * `name` - cache service name, genserver name
-  * `key` - key of cache
-
-  ## Examples
-
-  iex> Sonnam.Kvsrv.RedisCache.get(:cache, "foo")
-  {:ok, "bar"}
-  """
-  def get(name, key) do
-    Redix.command(name, ["GET", key])
-  end
-
-  @doc """
-  check if key in cache table
-
-  * `name` - cache service name, genserver name
-  * `key` - key of cache
-
-  ## Examples
-
-  iex> Sonnam.Kvsrv.RedisCache.exists?(:cache, "foo")
-  false
-  """
-  def exist?(name, key) do
-    case Redix.command(name, ["GET", key]) do
-      {:ok, nil} -> false
-      _ -> true
-    end
-  end
-
-  @doc """
-  drop a cache pair
-
-  * `name` - cache service name, genserver name
-  * `key` - key of cache
-
-  ## Examples
-
-  iex> Sonnam.Kvsrv.RedisCache.del(:cache, "foo")
-  {:ok, 1}
-  """
-  def del(name, key) do
-    Redix.command(name, ["DEL", key])
+  def pipeline(commands) do
+    :poolboy.transaction(:cache, &Redix.pipeline(&1, commands))
   end
 end
