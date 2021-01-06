@@ -62,3 +62,11 @@ defmodule Sonnam.EtaQueue.Server do
     end
   end
 end
+
+
+defmodule Sonnam.EtaQueue.Handler do
+  @moduledoc """
+  etaqueue handler protocal
+  """
+  @callback process([String.t()]) :: {:ok, integer()} | {:error, any()}
+end
