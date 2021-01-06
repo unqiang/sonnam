@@ -5,7 +5,7 @@ defmodule Sonnam.Macros.Response do
     end
   end
 
-  defmacro reply_succ(conn, data) do
+  defmacro reply_succ(conn, data \\ "success") do
     quote bind_quoted: [conn: conn, data: data] do
       json(conn, %{code: 200, data: data})
     end
