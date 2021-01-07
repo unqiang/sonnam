@@ -21,11 +21,28 @@ defmodule Sonnam.EtaQueue.Client do
 
   @impl true
   def init(args) do
-    children = [
-      {Redix, args}
+    {name, args} = Keyword.pop(args, :name, :eta_q_cli)
+
+    pool_opts = [
+      name: {:local, name},
+      worker_module: Redix,
+      size: 10,
+      max_overflow: 5
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    children = [
+      :poolboy.child_spec(name, pool_opts, args)
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one, name: __MODULE__)
+  end
+
+  def command(name, command) do
+    :poolboy.transaction(name, &Redix.command(&1, command))
+  end
+
+  def pipeline(name, commands) do
+    :poolboy.transaction(name, &Redix.pipeline(&1, commands))
   end
 
   @spec new_job(atom(), String.t(), String.t(), integer()) :: {:ok, term()}
@@ -33,14 +50,14 @@ defmodule Sonnam.EtaQueue.Client do
     bucket = "#{svc}-#{Base.gen_bucket(eta)}"
 
     # check bucket exists
-    Redix.command(name, ["EXISTS", bucket])
+    command(name, ["EXISTS", bucket])
     |> case do
       # already exists
       {:ok, 1} ->
-        Redix.command(name, ["ZADD", bucket, eta, job_id])
+        command(name, ["ZADD", bucket, eta, job_id])
 
       _ ->
-        Redix.pipeline(name, [["ZADD", bucket, eta, job_id], ["EXPIRE", bucket, 86400]])
+        pipeline(name, [["ZADD", bucket, eta, job_id], ["EXPIRE", bucket, 86400]])
     end
   end
 end

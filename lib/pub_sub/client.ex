@@ -21,18 +21,35 @@ defmodule Sonnam.PubSub.Client do
 
   @impl true
   def init(args) do
-    children = [
-      {Redix, args}
+    {name, args} = Keyword.pop(args, :name, :pub)
+
+    pool_opts = [
+      name: {:local, name},
+      worker_module: Redix,
+      size: 10,
+      max_overflow: 5
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    children = [
+      :poolboy.child_spec(name, pool_opts, args)
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one, name: __MODULE__)
+  end
+
+  def command(name, command) do
+    :poolboy.transaction(name, &Redix.command(&1, command))
+  end
+
+  def pipeline(name, commands) do
+    :poolboy.transaction(name, &Redix.pipeline(&1, commands))
   end
 
   @spec pub_to(atom(), event(), map() | String.t()) :: {:ok, integer()}
   def pub_to(name, event, body) do
     with {queue, call} <- event,
          {:ok, msg} <- Jason.encode(%{"call" => call, "body" => body}) do
-      Redix.command(name, ["LPUSH", queue, msg])
+      command(name, ["LPUSH", queue, msg])
     end
   end
 
@@ -40,7 +57,7 @@ defmodule Sonnam.PubSub.Client do
   def pub_to(name, event) do
     with {queue, call} <- event,
          {:ok, msg} <- Jason.encode(%{"call" => call}) do
-      Redix.command(name, ["LPUSH", queue, msg])
+      command(name, ["LPUSH", queue, msg])
     end
   end
 end

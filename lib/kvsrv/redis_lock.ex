@@ -39,18 +39,30 @@ defmodule Sonnam.Kvsrv.RedisLock do
 
   #### redis part ####
 
-  @spec start_link(lock_opts()) :: {:ok, pid()}
-  def start_link(args) do
-    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
-  end
-
   @impl true
   def init(args) do
-    children = [
-      {Redix, args}
+    {name, args} = Keyword.pop(args, :name, :lock)
+
+    pool_opts = [
+      name: {:local, name},
+      worker_module: Redix,
+      size: 10,
+      max_overflow: 5
     ]
 
-    Supervisor.init(children, strategy: :one_for_one)
+    children = [
+      :poolboy.child_spec(name, pool_opts, args)
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one, name: __MODULE__)
+  end
+
+  def command(name, command) do
+    :poolboy.transaction(name, &Redix.command(&1, command))
+  end
+
+  def pipeline(name, commands) do
+    :poolboy.transaction(name, &Redix.pipeline(&1, commands))
   end
 
   #### lock part ####
@@ -58,7 +70,7 @@ defmodule Sonnam.Kvsrv.RedisLock do
   defp helper_hash(), do: CryptoUtil.sha(@release_script) |> Base.encode16(case: :lower)
 
   def install_script(name) do
-    case Redix.command(name, ["SCRIPT", "LOAD", @release_script]) do
+    case command(name, ["SCRIPT", "LOAD", @release_script]) do
       {:ok, val} ->
         Logger.info(val)
 
@@ -97,7 +109,7 @@ defmodule Sonnam.Kvsrv.RedisLock do
   end
 
   defp lock(name, resource, value, ttl) do
-    case Redix.command(name, ["SET", resource, value, "NX", "PX", to_string(ttl)]) do
+    case command(name, ["SET", resource, value, "NX", "PX", to_string(ttl)]) do
       {:ok, "OK"} ->
         :ok
 
@@ -125,6 +137,6 @@ defmodule Sonnam.Kvsrv.RedisLock do
   """
   @spec unlock(atom(), String.t(), String.t()) :: {:ok, integer()}
   def unlock(name, resource, secret) do
-    Redix.command(name, ["EVALSHA", helper_hash(), "1", resource, secret])
+    command(name, ["EVALSHA", helper_hash(), "1", resource, secret])
   end
 end
