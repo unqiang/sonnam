@@ -114,11 +114,30 @@ defmodule Sonnam.Utils.TimeUtil do
     |> datetime_to_ts()
   end
 
-  @spec china_str_to_datetime(String.t()) :: DateTime.t()
+  @spec china_str_to_datetime(String.t()) :: DateTime.t() | nil
+  def china_str_to_datetime(""), do: nil
+
   def china_str_to_datetime(datetime_str) do
     [date, time] = String.split(datetime_str)
     {:ok, datetime, _} = DateTime.from_iso8601(date <> "T" <> time <> "+08:00")
     datetime
+  end
+
+  @spec china_str_to_naive(String.t()) :: NaiveDateTime.t() | nil
+  def china_str_to_naive(""), do: nil
+
+  def china_str_to_naive(str) do
+    str
+    |> china_str_to_datetime()
+    |> case do
+      nil ->
+        nil
+
+      dt ->
+        dt
+        |> DateTime.shift_zone!("Etc/UTC")
+        |> DateTime.to_naive()
+    end
   end
 
   @spec naive_datetime_to_str(NaiveDateTime.t(), Calendar.time_zone()) :: String.t()
@@ -135,4 +154,8 @@ defmodule Sonnam.Utils.TimeUtil do
             |> datetime_to_str()
         end).()
   end
+
+  @spec naive_to_china_str(NaiveDateTime.t()) :: String.t()
+  def naive_to_china_str(nil), do: ""
+  def naive_to_china_str(nt), do: naive_datetime_to_str(nt)
 end
