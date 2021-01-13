@@ -8,7 +8,7 @@ defmodule Sonnam.Aliyun.Oss do
   filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}
   """
 
-  def get_token(upload_dir, expire_sec, callback) do
+  def get_token(bucket, upload_dir, expire_sec, callback) do
     expire =
       DateTime.now!("Etc/UTC")
       |> DateTime.add(expire_sec, :second)
@@ -26,7 +26,6 @@ defmodule Sonnam.Aliyun.Oss do
       policy
       |> Sonnam.Aliyun.Sign.sign(access_key_secret())
 
-
     base64_callback_body =
       %{
         "callbackUrl" => callback,
@@ -39,7 +38,7 @@ defmodule Sonnam.Aliyun.Oss do
 
     %{
       "accessid" => access_key_id(),
-      "host" => "http://" <> endpoint(),
+      "host" => "http://#{bucket}.#{endpoint()}",
       "policy" => policy,
       "signature" => signature,
       "expire" => DateTime.to_unix(expire),
