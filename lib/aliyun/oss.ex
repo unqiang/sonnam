@@ -1,3 +1,14 @@
+defmodule Sonnam.Aliyun.OssConfig do
+  [:endpoint, :access_key_id, :access_key_secret]
+  |> Enum.map(fn config ->
+    def unquote(config)() do
+      :aliyun_oss
+      |> Application.get_env(unquote(config))
+      |> Confex.Resolver.resolve!()
+    end
+  end)
+end
+
 defmodule Sonnam.Aliyun.Oss do
   @moduledoc """
   阿里云OSS token生成
@@ -7,6 +18,13 @@ defmodule Sonnam.Aliyun.Oss do
   @callback_body """
   filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}
   """
+
+  @spec sign(String.t(), String.t()) :: String.t()
+  defp sign(string_to_sign, key) do
+    :crypto.hmac(:sha, key, string_to_sign)
+    |> Base.encode64()
+  end
+
 
   def get_token(bucket, upload_dir, expire_sec, callback) do
     expire =
@@ -24,7 +42,7 @@ defmodule Sonnam.Aliyun.Oss do
 
     signature =
       policy
-      |> Sonnam.Aliyun.Sign.sign(access_key_secret())
+      |> sign(access_key_secret())
 
     base64_callback_body =
       %{
