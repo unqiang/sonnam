@@ -4,6 +4,7 @@ defmodule Sonnam.Aliyun.OssConfig do
     def unquote(config)() do
       :aliyun_oss
       |> Application.get_env(unquote(config))
+      |> Confex.Resolver.resolve!()
     end
   end)
 end
