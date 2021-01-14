@@ -34,6 +34,8 @@ defmodule Sonnam.Wechat.Miniapp do
     end
   end
 
+  @spec get_access_token() ::
+          {:ok, %{access_token: String.t(), expire_in: integer()}} | {:error, String.t()}
   def get_access_token() do
     with app_id <- Sonnam.Wechat.MiniappConfig.app_id(),
          app_secret <- Sonnam.Wechat.MiniappConfig.app_secret(),
@@ -42,7 +44,15 @@ defmodule Sonnam.Wechat.Miniapp do
              app_secret
            }",
          {:ok, response} <- HTTPoison.get(url, recv_timeout: 3) do
-      response |> process_response()
+      response
+      |> process_response()
+      |> (fn
+            {:ok, %{"access_token" => token, "expires_in" => expires_in}} ->
+              {:ok, %{access_token: token, expire_in: expires_in}}
+
+            {:ok, %{"errorcode" => code, "errormsg" => msg}} ->
+              {:error, "#{code}:#{msg}"}
+          end).()
     else
       err ->
         Logger.error(inspect(err))
