@@ -13,7 +13,21 @@ defmodule Sonnam.Aliyun.Oss do
   @moduledoc """
   阿里云OSS token生成
   """
+
   import Sonnam.Aliyun.OssConfig
+
+  # defmacro __using__(opts) do
+  #   otp_app = Keyword.get(opts, :opt_app)
+
+  #   quote do
+  #     the_otp_app = unquote(otp_app)
+
+  #     def oss_cfg, do: Application.get_env(the_otp_app, :aliyun_oss)
+  #     def endpoint, do: Keyword.get(oss_cfg(), :endpoint)
+  #     def access_key_id, do: Keyword.get(oss_cfg(), :access_key_id)
+  #     def access_key_secret, do: Keyword.get(oss_cfg(), :access_key_secret)
+  #   end
+  # end
 
   @callback_body """
   filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}
@@ -24,7 +38,6 @@ defmodule Sonnam.Aliyun.Oss do
     :crypto.hmac(:sha, key, string_to_sign)
     |> Base.encode64()
   end
-
 
   def get_token(bucket, upload_dir, expire_sec, callback) do
     expire =
