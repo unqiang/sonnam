@@ -1,26 +1,15 @@
-defmodule Sonnam.Wechat.MiniappConfig do
-  [:app_id, :app_secret]
-  |> Enum.map(fn config ->
-    def unquote(config)() do
-      :wechat_miniapp
-      |> Application.get_env(unquote(config))
-      |> Confex.Resolver.resolve!()
-    end
-  end)
-end
-
 defmodule Sonnam.Wechat.Miniapp do
   @moduledoc """
   微信小程序工具
   """
   require Logger
-  require Sonnam.Wechat.MiniappConfig
+
+  @type miniapp_cfg :: [app_id: String.t(), app_secret: String.t()]
 
   @service_addr "https://api.weixin.qq.com"
 
-  def get_session(code) do
-    with app_id <- Sonnam.Wechat.MiniappConfig.app_id(),
-         app_secret <- Sonnam.Wechat.MiniappConfig.app_secret(),
+  def get_session(cfg, code) do
+    with [app_id: app_id, app_secret: app_secret] <- cfg,
          url <-
            "#{@service_addr}/sns/jscode2session?appid=#{app_id}&secret=#{app_secret}&js_code=#{
              code
@@ -34,11 +23,10 @@ defmodule Sonnam.Wechat.Miniapp do
     end
   end
 
-  @spec get_access_token() ::
+  @spec get_access_token(miniapp_cfg()) ::
           {:ok, %{access_token: String.t(), expire_in: integer()}} | {:error, String.t()}
-  def get_access_token() do
-    with app_id <- Sonnam.Wechat.MiniappConfig.app_id(),
-         app_secret <- Sonnam.Wechat.MiniappConfig.app_secret(),
+  def get_access_token(cfg) do
+    with [app_id: app_id, app_secret: app_secret] <- cfg,
          url <-
            "#{@service_addr}/cgi-bin/token?grant_type=client_credential&appid=#{app_id}&secret=#{
              app_secret
