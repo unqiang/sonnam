@@ -30,6 +30,12 @@ defmodule Sonnam.Utils.TimeUtil do
   @spec china_now_str() :: String.t()
   def china_now_str(), do: china_now() |> datetime_to_str()
 
+  @spec china_now_date() :: String.t()
+  def china_now_date() do
+    china_now()
+    |> datetime_to_date_str()
+  end
+
   @doc """
   convert timestamp to time string
 
@@ -105,6 +111,14 @@ defmodule Sonnam.Utils.TimeUtil do
       |> Enum.join(":")
 
     date <> " " <> time
+  end
+
+  @spec datetime_to_date_str(DateTime.t()) :: String.t()
+  def datetime_to_date_str(datetime) do
+    [datetime.year, datetime.month, datetime.day]
+    |> Enum.map(&to_string(&1))
+    |> Enum.map(&String.pad_leading(&1, 2, "0"))
+    |> Enum.join("-")
   end
 
   @spec china_str_to_datetime(String.t()) :: integer()
