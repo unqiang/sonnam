@@ -12,8 +12,6 @@ defmodule Sonnam.PubSub.Client do
           password: String.t()
         ]
 
-  @type event :: {String.t(), String.t()}
-
   @spec start_link(pub_opts()) :: {:ok, pid()}
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
@@ -26,8 +24,8 @@ defmodule Sonnam.PubSub.Client do
     pool_opts = [
       name: {:local, name},
       worker_module: Redix,
-      size: 10,
-      max_overflow: 5
+      size: 2,
+      max_overflow: 1
     ]
 
     children = [
@@ -45,18 +43,16 @@ defmodule Sonnam.PubSub.Client do
     :poolboy.transaction(name, &Redix.pipeline(&1, commands))
   end
 
-  @spec pub_to(atom(), event(), map() | String.t()) :: {:ok, integer()}
-  def pub_to(name, event, body) do
-    with {queue, call} <- event,
-         {:ok, msg} <- Jason.encode(%{"call" => call, "body" => body}) do
+  @spec pub_to(atom(), queue: String.t(), call: String.t(), body: term()) :: {:ok, integer()}
+  def pub_to(name, queue: queue, call: call, body: body) do
+    with {:ok, msg} <- Jason.encode(%{"call" => call, "body" => body}) do
       command(name, ["LPUSH", queue, msg])
     end
   end
 
-  @spec pub_to(atom(), event()) :: {:ok, integer()}
-  def pub_to(name, event) do
-    with {queue, call} <- event,
-         {:ok, msg} <- Jason.encode(%{"call" => call}) do
+  @spec pub_to(atom(), queue: String.t(), call: String.t()) :: {:ok, integer()}
+  def pub_to(name, queue: queue, call: call) do
+    with {:ok, msg} <- Jason.encode(%{"call" => call}) do
       command(name, ["LPUSH", queue, msg])
     end
   end

@@ -26,8 +26,8 @@ defmodule Sonnam.EtaQueue.Client do
     pool_opts = [
       name: {:local, name},
       worker_module: Redix,
-      size: 10,
-      max_overflow: 5
+      size: 2,
+      max_overflow: 1
     ]
 
     children = [
