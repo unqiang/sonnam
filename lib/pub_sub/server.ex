@@ -16,7 +16,7 @@ defmodule Sonnam.PubSub.Server do
           port: integer(),
           password: String.t()
         ]
-  @timeout 10
+  @timeout 3
 
   @spec start_link(sub_opts()) :: {:ok, pid()}
   def start_link(opts) do
@@ -38,14 +38,19 @@ defmodule Sonnam.PubSub.Server do
   end
 
   def loop(name, queue, handler) do
+    Logger.debug("#{queue} subscriber beat!")
+
     name
-    |> Redix.command(["BRPOP", queue, @timeout])
+    |> Redix.command(["BRPOP", queue, to_string(@timeout)])
     |> (fn
           {:ok, [_, event]} ->
             Task.start(fn -> process_event(handler, event) end)
             loop(name, queue, handler)
 
           {:error, _} ->
+            loop(name, queue, handler)
+
+          _ ->
             loop(name, queue, handler)
         end).()
   end
@@ -61,6 +66,9 @@ defmodule Sonnam.PubSub.Server do
 
           {:ok, %{"call" => call}} ->
             apply(handler, String.to_atom(call), [])
+
+          other ->
+            Logger.error("invalid event => #{inspect(other)}")
         end).()
   end
 end
