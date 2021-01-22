@@ -48,9 +48,11 @@ defmodule Sonnam.PubSub.Server do
             loop(name, queue, handler)
 
           {:error, _} ->
+            Process.sleep(@timeout * 1000)
             loop(name, queue, handler)
 
           _ ->
+            Process.sleep(@timeout * 1000)
             loop(name, queue, handler)
         end).()
   end
