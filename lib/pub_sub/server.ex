@@ -38,7 +38,7 @@ defmodule Sonnam.PubSub.Server do
   end
 
   def loop(name, queue, handler) do
-    Logger.debug("#{queue} subscriber beat!")
+    # Logger.debug("#{queue} subscriber beat!")
 
     name
     |> Redix.command(["BRPOP", queue, to_string(@timeout)])
