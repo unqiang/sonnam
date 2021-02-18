@@ -121,7 +121,7 @@ defmodule Sonnam.Utils.TimeUtil do
     |> Enum.join("-")
   end
 
-  @spec china_str_to_datetime(String.t()) :: integer()
+  @spec china_str_to_ts(String.t()) :: integer()
   def china_str_to_ts(datetime_str) do
     datetime_str
     |> china_str_to_datetime()
