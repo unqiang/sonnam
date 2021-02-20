@@ -32,7 +32,7 @@ defmodule Sonnam.Wechat.Miniapp do
       end
     else
       err ->
-        Logger.error(inspect(err))
+        Logger.error("wechatmini jscode2session failed: #{inspect(err)}")
         {:error, inspect(err)}
     end
   end
@@ -57,7 +57,7 @@ defmodule Sonnam.Wechat.Miniapp do
           end).()
     else
       err ->
-        Logger.error(inspect(err))
+        Logger.error("wechatmini get token failed: #{inspect(err)}")
         {:error, inspect(err)}
     end
   end
