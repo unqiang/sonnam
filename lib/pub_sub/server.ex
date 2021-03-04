@@ -38,8 +38,6 @@ defmodule Sonnam.PubSub.Server do
   end
 
   def loop(name, queue, handler) do
-    # Logger.debug("#{queue} subscriber beat!")
-
     name
     |> Redix.command(["BRPOP", queue, to_string(@timeout)])
     |> (fn
@@ -64,10 +62,10 @@ defmodule Sonnam.PubSub.Server do
     |> Jason.decode()
     |> (fn
           {:ok, %{"call" => call, "body" => body}} ->
-            apply(handler, String.to_atom(call), [body])
+            send(handler, {:process, call, body})
 
           {:ok, %{"call" => call}} ->
-            apply(handler, String.to_atom(call), [])
+            send(handler, {:process, call})
 
           other ->
             Logger.error("invalid event => #{inspect(other)}")

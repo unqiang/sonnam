@@ -50,7 +50,8 @@ defmodule Sonnam.EtaQueue.Server do
       {:ok, 1} ->
         {:ok, job_id_list} = Redix.command(name, ["ZRANGEBYSCORE", bucket, "-inf", now_ts])
         Redix.command(name, ["ZREM", bucket | job_id_list])
-        apply(handler, :process, [job_id_list])
+        # apply(handler, :process, [job_id_list])
+        Task.start(fn -> send(handler, {:process, job_id_list}) end)
 
         Process.sleep(1000)
         loop(name, svc, handler)
@@ -61,12 +62,4 @@ defmodule Sonnam.EtaQueue.Server do
         loop(name, svc, handler)
     end
   end
-end
-
-
-defmodule Sonnam.EtaQueue.Handler do
-  @moduledoc """
-  etaqueue handler protocal
-  """
-  @callback process([String.t()]) :: {:ok, integer()} | {:error, any()}
 end

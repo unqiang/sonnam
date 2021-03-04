@@ -43,14 +43,15 @@ defmodule Sonnam.PubSub.Client do
     :poolboy.transaction(name, &Redix.pipeline(&1, commands))
   end
 
-  @spec pub_to(atom(), list()) :: {:ok, integer()}
-  def pub_to(name, queue: queue, call: call, body: body) do
+  @spec pub_to(atom(), String.t(), integer(), String.t()) :: {:ok, integer()}
+  def pub_to(name, queue, call, body) do
     with {:ok, msg} <- Jason.encode(%{"call" => call, "body" => body}) do
       command(name, ["LPUSH", queue, msg])
     end
   end
 
-  def pub_to(name, queue: queue, call: call) do
+  @spec pub_to(atom(), String.t(), integer()) :: {:ok, integer()}
+  def pub_to(name, queue, call) do
     with {:ok, msg} <- Jason.encode(%{"call" => call}) do
       command(name, ["LPUSH", queue, msg])
     end
