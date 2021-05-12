@@ -63,7 +63,7 @@ defmodule Sonnam.Aliyun.Oss do
 
     %{
       "accessid" => access_key_id,
-      "host" => "http://#{bucket}.#{endpoint}",
+      "host" => "https://#{bucket}.#{endpoint}",
       "policy" => policy,
       "signature" => signature,
       "expire" => DateTime.to_unix(expire),
