@@ -16,7 +16,7 @@ defmodule Sonnam.Aliyun.Oss do
 
   @spec sign(String.t(), String.t()) :: String.t()
   defp sign(string_to_sign, key) do
-    :crypto.hmac(:sha, key, string_to_sign)
+    :crypto.mac(:hmac, :sha, key, string_to_sign)
     |> Base.encode64()
   end
 
