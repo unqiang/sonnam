@@ -2,6 +2,7 @@ defmodule Sonnam.Utils.CryptoUtil do
   @moduledoc """
   加密工具
   """
+
   @doc """
   md5
   """
@@ -40,9 +41,10 @@ defmodule Sonnam.Utils.CryptoUtil do
 
   ## Examples
 
-  iex> generate("U", 4)
+  iex> generate_id("U", 4)
   "U16219286427399"
   """
+  @spec generate_id(String.t(), integer()) :: String.t()
   def generate_id(prefix, tail_len) do
     tail =
       1..tail_len
