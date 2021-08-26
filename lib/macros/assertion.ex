@@ -15,7 +15,7 @@ defmodule Sonnam.Macros.Assertion do
 
   defmacro assert_exists(obj, error_msg) do
     quote do
-      (fn -> not is_nil(unquote(obj)) end)
+      (fn -> not is_nil(unquote(obj)) end).()
       |> case do
         true -> :ok
         false -> {:error, unquote(error_msg)}
