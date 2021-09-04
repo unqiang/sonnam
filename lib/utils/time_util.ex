@@ -33,7 +33,7 @@ defmodule Sonnam.Utils.TimeUtil do
   @spec china_now_date() :: String.t()
   def china_now_date() do
     china_now()
-    |> datetime_to_date_str()
+    |> datetime_to_str("%Y-%m-%d")
   end
 
   @doc """
@@ -96,29 +96,8 @@ defmodule Sonnam.Utils.TimeUtil do
   * `datetime`     - datetime
   """
   @spec datetime_to_str(DateTime.t()) :: String.t()
-  def datetime_to_str(datetime) do
-    # date
-    date =
-      [datetime.year, datetime.month, datetime.day]
-      |> Enum.map(&to_string(&1))
-      |> Enum.map(&String.pad_leading(&1, 2, "0"))
-      |> Enum.join("-")
-
-    time =
-      [datetime.hour, datetime.minute, datetime.second]
-      |> Enum.map(&to_string(&1))
-      |> Enum.map(&String.pad_leading(&1, 2, "0"))
-      |> Enum.join(":")
-
-    date <> " " <> time
-  end
-
-  @spec datetime_to_date_str(DateTime.t()) :: String.t()
-  def datetime_to_date_str(datetime) do
-    [datetime.year, datetime.month, datetime.day]
-    |> Enum.map(&to_string(&1))
-    |> Enum.map(&String.pad_leading(&1, 2, "0"))
-    |> Enum.join("-")
+  def datetime_to_str(datetime, format \\ "%Y-%m-%d %H:%M:%S") do
+   Calendar.strftime(datetime, format)
   end
 
   @spec china_str_to_ts(String.t()) :: integer()

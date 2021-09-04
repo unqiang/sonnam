@@ -1,7 +1,8 @@
-defmodule Sonnam.Aliyun.Oss do
+defmodule Sonnam.AliyunOss.Token do
   @moduledoc """
   阿里云OSS token生成
   """
+  import Sonnam.AliyunOss.Util, only: [sign: 2]
 
   @type oss_cfg :: [
           bucket: String.t(),
@@ -13,12 +14,6 @@ defmodule Sonnam.Aliyun.Oss do
   @callback_body """
   filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}
   """
-
-  @spec sign(String.t(), String.t()) :: String.t()
-  defp sign(string_to_sign, key) do
-    :crypto.mac(:hmac, :sha, key, string_to_sign)
-    |> Base.encode64()
-  end
 
   @spec get_token(
           oss_cfg(),
