@@ -7,6 +7,5 @@ defmodule Sonnam.AliyunOss.Client do
     field :endpoint, :string
     field :access_key_id, :string
     field :access_key_secret, :string
-    field :bucket, :string
   end
 end

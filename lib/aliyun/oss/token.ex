@@ -13,10 +13,11 @@ defmodule Sonnam.AliyunOss.Token do
   @spec get_token(
           Client.t(),
           String.t(),
+          String.t(),
           integer(),
           String.t()
         ) :: {:ok, String.t()}
-  def get_token(cli, upload_dir, expire_sec, callback) do
+  def get_token(cli, bucket, upload_dir, expire_sec, callback) do
     expire =
       DateTime.now!("Etc/UTC")
       |> DateTime.add(expire_sec, :second)
@@ -46,7 +47,7 @@ defmodule Sonnam.AliyunOss.Token do
 
     %{
       "accessid" => cli.access_key_id,
-      "host" => "https://#{cli.bucket}.#{cli.endpoint}",
+      "host" => "https://#{bucket}.#{cli.endpoint}",
       "policy" => policy,
       "signature" => signature,
       "expire" => DateTime.to_unix(expire),
