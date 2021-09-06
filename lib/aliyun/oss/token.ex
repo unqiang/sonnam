@@ -4,31 +4,19 @@ defmodule Sonnam.AliyunOss.Token do
   """
   import Sonnam.AliyunOss.Util, only: [sign: 2]
 
-  @type oss_cfg :: [
-          bucket: String.t(),
-          endpoint: String.t(),
-          access_key_id: String.t(),
-          access_key_secret: String.t()
-        ]
+  alias Sonnam.AliyunOss.Client
 
   @callback_body """
   filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}
   """
 
   @spec get_token(
-          oss_cfg(),
+          Client.t(),
           String.t(),
           integer(),
           String.t()
         ) :: {:ok, String.t()}
-  def get_token(cfg, upload_dir, expire_sec, callback) do
-    [
-      bucket: bucket,
-      endpoint: endpoint,
-      access_key_id: access_key_id,
-      access_key_secret: access_key_secret
-    ] = cfg
-
+  def get_token(cli, upload_dir, expire_sec, callback) do
     expire =
       DateTime.now!("Etc/UTC")
       |> DateTime.add(expire_sec, :second)
@@ -44,7 +32,7 @@ defmodule Sonnam.AliyunOss.Token do
 
     signature =
       policy
-      |> sign(access_key_secret)
+      |> sign(cli.access_key_secret)
 
     base64_callback_body =
       %{
@@ -57,8 +45,8 @@ defmodule Sonnam.AliyunOss.Token do
       |> Base.encode64()
 
     %{
-      "accessid" => access_key_id,
-      "host" => "https://#{bucket}.#{endpoint}",
+      "accessid" => cli.access_key_id,
+      "host" => "https://#{cli.bucket}.#{cli.endpoint}",
       "policy" => policy,
       "signature" => signature,
       "expire" => DateTime.to_unix(expire),
