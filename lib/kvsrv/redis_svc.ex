@@ -5,7 +5,7 @@ defmodule Sonnam.Kvsrv.RedisSvc do
 
   use Supervisor
 
-  @type redis_opts :: [name: atom(), host: String.t(), port: integer(), password: String.t()]
+  @type redis_opts :: [name: atom(), uri: String.t()]
 
   @spec start_link(redis_opts()) :: {:ok, pid()}
   def start_link(opts) do
@@ -13,8 +13,8 @@ defmodule Sonnam.Kvsrv.RedisSvc do
   end
 
   @impl true
-  def init(args) do
-    {name, args} = Keyword.pop(args, :name, :redis)
+  def init(opts) do
+    [name: name, uri: uri] = opts
 
     pool_opts = [
       name: {:local, name},
@@ -24,7 +24,7 @@ defmodule Sonnam.Kvsrv.RedisSvc do
     ]
 
     children = [
-      :poolboy.child_spec(name, pool_opts, args)
+      :poolboy.child_spec(name, pool_opts, uri)
     ]
 
     Supervisor.init(children, strategy: :one_for_one, name: __MODULE__)

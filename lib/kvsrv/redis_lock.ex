@@ -28,7 +28,7 @@ defmodule Sonnam.Kvsrv.RedisLock do
   use Supervisor
   alias Sonnam.Utils.CryptoUtil
 
-  @type lock_opts :: [name: atom(), host: String.t(), port: integer(), password: String.t()]
+  @type lock_opts :: [name: atom(), uri: String.t()]
   @release_script ~S"""
   if redis.call("get",KEYS[1]) == ARGV[1] then
     return redis.call("del", KEYS[1])
@@ -40,8 +40,8 @@ defmodule Sonnam.Kvsrv.RedisLock do
   #### redis part ####
 
   @impl true
-  def init(args) do
-    {name, args} = Keyword.pop(args, :name, :lock)
+  def init(opts) do
+    [name: name, uri: uri] = opts
 
     pool_opts = [
       name: {:local, name},
@@ -51,7 +51,7 @@ defmodule Sonnam.Kvsrv.RedisLock do
     ]
 
     children = [
-      :poolboy.child_spec(name, pool_opts, args)
+      :poolboy.child_spec(name, pool_opts, uri)
     ]
 
     Supervisor.init(children, strategy: :one_for_one, name: __MODULE__)
