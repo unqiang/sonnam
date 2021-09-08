@@ -26,7 +26,8 @@ defmodule Sonnam.MixProject do
       {:httpoison, "~> 1.7"},
       {:jason, "~> 1.2"},
       {:poolboy, "~> 1.5.1"},
-      {:strukt, "~> 0.2.1"}
+      {:strukt, "~> 0.2.1"},
+      {:mime, "~> 2.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
