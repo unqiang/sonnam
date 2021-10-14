@@ -151,4 +151,13 @@ defmodule Sonnam.Utils.TimeUtil do
   @spec naive_to_china_str(NaiveDateTime.t()) :: String.t()
   def naive_to_china_str(nil), do: ""
   def naive_to_china_str(nt), do: naive_datetime_to_str(nt)
+
+
+
+  @spec naive_to_datetime(NaiveDateTime.t(), Calendar.time_zone()) :: DateTime.t()
+  def naive_to_datetime(ndt, tz \\ "Asia/Shanghai") do
+    ndt
+    |> DateTime.from_naive!("Etc/UTC")
+    |> DateTime.shift_zone!(tz)
+  end
 end
