@@ -22,4 +22,7 @@ defmodule Sonnam.Utils.FormUtil do
             "Expected `{:ok, result}` or `{:error, reason}` from #{mod}##{func}, got: #{inspect(resp)}"
     end
   end
+
+  @spec with_ok(term) :: {:ok, term}
+  def with_ok(val), do: {:ok, val}
 end
