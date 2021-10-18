@@ -25,4 +25,7 @@ defmodule Sonnam.Utils.FormUtil do
 
   @spec with_ok(term) :: {:ok, term}
   def with_ok(val), do: {:ok, val}
+
+  @spec from_ok({:ok, term}) :: term
+  def from_ok({:ok, val}), do: val
 end
