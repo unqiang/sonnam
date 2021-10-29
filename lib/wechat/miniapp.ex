@@ -9,13 +9,34 @@ defmodule Sonnam.Wechat.Miniapp do
 
   @service_addr "https://api.weixin.qq.com"
 
+  @spec get_access_token(miniapp_cfg()) ::
+          {:ok, %{access_token: String.t(), expire_in: integer()}} | {:error, String.t()}
+  def get_access_token(cfg) do
+    with [app_id: app_id, app_secret: app_secret] <- cfg,
+         url <-
+           "#{@service_addr}/cgi-bin/token?grant_type=client_credential&appid=#{app_id}&secret=#{app_secret}",
+         {:ok, response} <- HTTPoison.get(url, recv_timeout: 3) do
+      response
+      |> process_response()
+      |> (fn
+            {:ok, %{"access_token" => token, "expires_in" => expires_in}} ->
+              {:ok, %{access_token: token, expire_in: expires_in}}
+
+            {:ok, %{"errorcode" => code, "errormsg" => msg}} ->
+              {:error, "#{code}:#{msg}"}
+          end).()
+    else
+      err ->
+        Logger.error("wechatmini get token failed: #{inspect(err)}")
+        {:error, inspect(err)}
+    end
+  end
+
   @spec get_session(miniapp_cfg(), String.t()) :: {:ok, session_info()} | {:error, String.t()}
   def get_session(cfg, code) do
     with [app_id: app_id, app_secret: app_secret] <- cfg,
          url <-
-           "#{@service_addr}/sns/jscode2session?appid=#{app_id}&secret=#{app_secret}&js_code=#{
-             code
-           }&grant_type=authorization_code",
+           "#{@service_addr}/sns/jscode2session?appid=#{app_id}&secret=#{app_secret}&js_code=#{code}&grant_type=authorization_code",
          {:ok, response} <- HTTPoison.get(url, recv_timeout: 3),
          {:ok, reply} <- process_response(response) do
       case reply do
@@ -37,28 +58,25 @@ defmodule Sonnam.Wechat.Miniapp do
     end
   end
 
-  @spec get_access_token(miniapp_cfg()) ::
-          {:ok, %{access_token: String.t(), expire_in: integer()}} | {:error, String.t()}
-  def get_access_token(cfg) do
-    with [app_id: app_id, app_secret: app_secret] <- cfg,
-         url <-
-           "#{@service_addr}/cgi-bin/token?grant_type=client_credential&appid=#{app_id}&secret=#{
-             app_secret
-           }",
-         {:ok, response} <- HTTPoison.get(url, recv_timeout: 3) do
-      response
-      |> process_response()
-      |> (fn
-            {:ok, %{"access_token" => token, "expires_in" => expires_in}} ->
-              {:ok, %{access_token: token, expire_in: expires_in}}
-
-            {:ok, %{"errorcode" => code, "errormsg" => msg}} ->
-              {:error, "#{code}:#{msg}"}
-          end).()
+  @spec get_unlimited_wxacode(String.t(), keyword()) :: {:ok, binary()} | {:error, String.t()}
+  def get_unlimited_wxacode(token, opts) do
+    with url <- "#{@service_addr}/wxa/getwxacodeunlimit?access_token=#{token}",
+         payload <- %{
+           scene: Keyword.get(opts, :scene),
+           page: Keyword.get(opts, :page),
+           width: Keyword.get(opts, :width),
+           auto_color: Keyword.get(opts, :auto_color),
+           line_color: Keyword.get(opts, :line_color),
+           is_hyaline: Keyword.get(opts, :hyaline)
+         },
+         {:ok, body} <- Jason.encode(payload),
+         {:ok, response} <- HTTPoison.post(url, body),
+         %HTTPoison.Response{status_code: 200, body: image} <- response do
+      {:ok, image}
     else
-      err ->
-        Logger.error("wechatmini get token failed: #{inspect(err)}")
-        {:error, inspect(err)}
+      reason ->
+        Logger.error("get_unlimited_wxacode error: #{inspect(reason)}")
+        {:error, "Internal server error"}
     end
   end
 
