@@ -59,6 +59,7 @@ defmodule Sonnam.AliyunOss.Util do
   """
   def gmt_now() do
     Sonnam.Utils.TimeUtil.now()
+    |> then(fn {:ok, x} -> x end)
     |> Calendar.strftime("%a, %d %b %Y %H:%M:%S GMT")
   end
 end

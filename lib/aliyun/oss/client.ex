@@ -79,8 +79,9 @@ defmodule Sonnam.AliyunOss.Request do
   end
 
   def new!(params) do
-    {:ok, m} = new(params)
-    m
+    params
+    |> new()
+    |> then(fn {:ok, ret} -> ret end)
   end
 
   defp ensure_essential_headers(%__MODULE__{} = req) do

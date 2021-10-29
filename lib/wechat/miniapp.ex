@@ -6,6 +6,7 @@ defmodule Sonnam.Wechat.Miniapp do
 
   @type miniapp_cfg :: [app_id: String.t(), app_secret: String.t()]
   @type session_info :: %{openid: String.t(), session_key: String.t(), unionid: String.t()}
+  @type err_t :: {:error, any()}
 
   @service_addr "https://api.weixin.qq.com"
 
@@ -58,7 +59,10 @@ defmodule Sonnam.Wechat.Miniapp do
     end
   end
 
-  @spec get_unlimited_wxacode(String.t(), keyword()) :: {:ok, binary()} | {:error, String.t()}
+  @doc """
+  https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.getUnlimited.html
+  """
+  @spec get_unlimited_wxacode(String.t(), keyword()) :: {:ok, iodata()} | {:error, String.t()}
   def get_unlimited_wxacode(token, opts) do
     with url <- "#{@service_addr}/wxa/getwxacodeunlimit?access_token=#{token}",
          payload <- %{
@@ -76,6 +80,31 @@ defmodule Sonnam.Wechat.Miniapp do
     else
       reason ->
         Logger.error("get_unlimited_wxacode error: #{inspect(reason)}")
+        {:error, "Internal server error"}
+    end
+  end
+
+  @doc """
+  https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/url-link/urllink.generate.html
+  """
+  @spec get_urllink(String.t(), keyword()) :: {:ok, map()} | err_t()
+  def get_urllink(token, opts) do
+    with url <- "#{@service_addr}/wxa/generate_urllink?access_token=#{token}",
+         payload <- %{
+           path: Keyword.get(opts, :path),
+           query: Keyword.get(opts, :query),
+           env_version: Keyword.get(opts, :env_version),
+           is_expire: Keyword.get(opts, :is_expire),
+           expire_type: Keyword.get(opts, :expire_type),
+           expire_time: Keyword.get(opts, :expire_time),
+           expire_interval: Keyword.get(opts, :expire_interval)
+         },
+         {:ok, body} <- Jason.encode(payload),
+         {:ok, response} <- HTTPoison.post(url, body) do
+      process_response(response)
+    else
+      reason ->
+        Logger.error("get_urllink error: #{inspect(reason)}")
         {:error, "Internal server error"}
     end
   end

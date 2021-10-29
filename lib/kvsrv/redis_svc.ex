@@ -30,6 +30,7 @@ defmodule Sonnam.Kvsrv.RedisSvc do
     Supervisor.init(children, strategy: :one_for_one, name: __MODULE__)
   end
 
+  @spec command(atom(), [String.t()]) :: {:ok, term()} | {:error, term()}
   def command(name, command) do
     :poolboy.transaction(name, &Redix.command(&1, command))
   end
