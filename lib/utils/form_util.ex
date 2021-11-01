@@ -5,6 +5,8 @@ defmodule Sonnam.Utils.FormUtil do
     defexception [:message]
   end
 
+  @type err :: {:error, any()}
+
   @doc false
   def returning_tuple({mod, func, args}) do
     result = apply(mod, func, args)
@@ -28,4 +30,14 @@ defmodule Sonnam.Utils.FormUtil do
 
   @spec from_ok({:ok, term}) :: term
   def from_ok({:ok, val}), do: val
+
+  @spec ok_pipe({:ok, term()} | err(), fun()) :: {:ok, term()} | err()
+  def ok_pipe(resp, func) do
+    resp
+    |> case do
+      {:ok, nil} -> {:ok, nil}
+      {:ok, ret} -> {:ok, func.(ret)}
+      other -> other
+    end
+  end
 end
