@@ -26,6 +26,7 @@ defmodule Sonnam.Utils.FormUtil do
   end
 
   @spec with_ok(term) :: {:ok, term}
+  def with_ok({:ok, val}), do: {:ok, val}
   def with_ok(val), do: {:ok, val}
 
   @spec from_ok({:ok, term}) :: term
@@ -36,7 +37,7 @@ defmodule Sonnam.Utils.FormUtil do
     resp
     |> case do
       {:ok, nil} -> {:ok, nil}
-      {:ok, ret} -> {:ok, func.(ret)}
+      {:ok, ret} -> func.(ret) |> with_ok
       other -> other
     end
   end
