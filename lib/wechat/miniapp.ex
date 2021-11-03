@@ -10,6 +10,9 @@ defmodule Sonnam.Wechat.Miniapp do
 
   @service_addr "https://api.weixin.qq.com"
 
+  defp process_response(%HTTPoison.Response{status_code: 200, body: body}), do: Jason.decode(body)
+  defp process_response(%HTTPoison.Response{status_code: code}), do: {:error, "service #{code}"}
+
   @spec get_access_token(miniapp_cfg()) ::
           {:ok, %{access_token: String.t(), expire_in: integer()}} | {:error, String.t()}
   def get_access_token(cfg) do
@@ -109,6 +112,25 @@ defmodule Sonnam.Wechat.Miniapp do
     end
   end
 
-  defp process_response(%HTTPoison.Response{status_code: 200, body: body}), do: Jason.decode(body)
-  defp process_response(%HTTPoison.Response{status_code: code}), do: {:error, "service #{code}"}
+  @spec subscribe_send(String.t(), String.t(), String.t(), %{atom() => any()}, keyword()) ::
+          {:ok, term()} | err_t()
+  def subscribe_send(token, touser, template_id, data, opts) do
+    with url <- "#{@service_addr}/cgi-bin/message/subscribe/send?access_token=#{token}",
+         payload <- %{
+           touser: touser,
+           template_id: template_id,
+           data: data,
+           page: Keyword.get(opts, :page),
+           miniprogram_state: Keyword.get(opts, :miniprogram_state),
+           lang: Keyword.get(opts, :lang)
+         },
+         {:ok, body} <- Jason.encode(payload),
+         {:ok, response} <- HTTPoison.post(url, body) do
+      process_response(response)
+    else
+      reason ->
+        Logger.error("send subscribe message failed: #{inspect(reason)}")
+        {:error, "Internal server error"}
+    end
+  end
 end
