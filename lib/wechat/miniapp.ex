@@ -133,4 +133,26 @@ defmodule Sonnam.Wechat.Miniapp do
         {:error, "Internal server error"}
     end
   end
+
+  @doc """
+  https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/sec-check/security.msgSecCheck.html
+  """
+  @spec msg_sec_check(String.t(), String.t(), integer, String.t()) :: {:ok, term()} | err_t()
+  def msg_sec_check(token, openid, scene, content) do
+    with url <- "#{@service_addr}/wxa/msg_sec_check?access_token=#{token}",
+         payload <- %{
+           version: 2,
+           openid: openid,
+           scene: scene,
+           content: content
+         },
+         {:ok, body} <- Jason.encode(payload),
+         {:ok, response} <- HTTPoison.post(url, body) do
+      process_response(response)
+    else
+      reason ->
+        Logger.error("send subscribe message failed: #{inspect(reason)}")
+        {:error, "Internal server error"}
+    end
+  end
 end
