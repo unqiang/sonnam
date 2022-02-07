@@ -22,7 +22,7 @@ defmodule Sonnam.MixProject do
   defp deps do
     [
       {:tzdata, "~> 1.1"},
-      {:redix, "~> 0.11"},
+      {:redix, "~> 1.1"},
       {:httpoison, "~> 1.8"},
       {:jason, "~> 1.3"},
       {:poolboy, "~> 1.5"},
