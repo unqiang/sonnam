@@ -13,6 +13,9 @@ defmodule Sonnam.Wechat.Miniapp do
   defp process_response(%HTTPoison.Response{status_code: 200, body: body}), do: Jason.decode(body)
   defp process_response(%HTTPoison.Response{status_code: code}), do: {:error, "service #{code}"}
 
+  @doc """
+  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
+  """
   @spec get_access_token(miniapp_cfg()) ::
           {:ok, %{access_token: String.t(), expire_in: integer()}} | {:error, String.t()}
   def get_access_token(cfg) do
@@ -36,6 +39,9 @@ defmodule Sonnam.Wechat.Miniapp do
     end
   end
 
+  @doc """
+  https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+  """
   @spec get_session(miniapp_cfg(), String.t()) :: {:ok, session_info()} | {:error, String.t()}
   def get_session(cfg, code) do
     with [app_id: app_id, app_secret: app_secret] <- cfg,
