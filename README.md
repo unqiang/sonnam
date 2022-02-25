@@ -1,21 +1,9 @@
 # Sonnam
 
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `sonnam` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:sonnam, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/sonnam](https://hexdocs.pm/sonnam).
-
+个人使用的elixir开发工具，包括
+- redis简单封装
+- aliyun oss封装
+- 微信支付sdk
+- 常用宏
+- 时间工具
+- 加密工具
