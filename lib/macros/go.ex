@@ -1,9 +1,11 @@
 defmodule Sonnam.Macros.Go do
   @moduledoc false
 
-  defmacro go(task) do
+  defmacro go(supervisor, task) do
     quote do
-      Task.start(fn -> unquote(task) end)
+      Task.Supervisor.start_child(unquote(supervisor), fn -> unquote(task) end,
+        restart: :transient
+      )
     end
   end
 end
