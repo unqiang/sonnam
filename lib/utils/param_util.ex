@@ -27,9 +27,11 @@ defimpl Sonnam.Utils.Param, for: Map do
   def to_string(param), do: Jason.encode!(param)
 end
 
-
 ######### guards ##########
 
 defmodule Sonnam.Guard do
   defguard not_empty(val) when val != "" and not is_nil(val)
+
+  @spec is_empty(any) :: boolean
+  def is_empty(value), do: is_nil(value) or value == 0 or value == ""
 end
