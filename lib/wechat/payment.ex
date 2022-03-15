@@ -223,7 +223,7 @@ defmodule Sonnam.WechatPay do
        "/v3/pay/transactions/id/#{transaction_id}",
        :get,
        %{"mchid" => cfg[:mchid]},
-       nil
+       %{}
      ), cfg}
   end
 
@@ -256,7 +256,9 @@ defmodule Sonnam.WechatPay do
 
   @spec request(keyword(), String.t(), method(), map() | keyword() | nil, map(), list(), list()) ::
           {:ok, any()} | {:error, String.t()}
-  defp request(cfg, api, method, params, attrs, headers \\ [], opts \\ [recv_timeout: 2000]) do
+  defp request(cfg, api, method, params, attrs, headers \\ [], opts \\ [recv_timeout: 2000])
+
+  defp request(cfg, api, method, params, attrs, headers, opts) do
     with ts <- timestamp(),
          nonce_str <- random_string(12),
          signature <- sign(method, api, attrs, nonce_str, ts, cfg[:client_key]),
