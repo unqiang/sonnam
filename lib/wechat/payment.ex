@@ -56,17 +56,17 @@ defmodule Sonnam.WechatPay do
     }
   ]
   """
-  @spec get_certificates(pid()) :: [map()]
+  @spec get_certificates(atom()) :: [map()]
   def get_certificates(pid) do
     GenServer.call(pid, :get_certificates)
   end
 
-  @spec decrypt_response(pid(), map()) :: binary()
+  @spec decrypt_response(atom(), map()) :: binary()
   def decrypt_response(pid, data) do
     GenServer.call(pid, {:decrypt_response, data})
   end
 
-  @spec verify_response(pid(), keyword(), binary()) :: boolean() | {:error, String.t()}
+  @spec verify_response(atom(), keyword(), binary()) :: boolean() | {:error, String.t()}
   def verify_response(pid, headers, body) do
     GenServer.call(pid, {:verify_response, headers, body})
   end
@@ -86,7 +86,7 @@ defmodule Sonnam.WechatPay do
       recv_timeout: 2000)
   {:ok, %{"prepay_id" => "wx25104640294460668d258585313de91000"}}
   """
-  @spec create_jsapi_transaction(pid(), map(), keyword()) :: {:ok, map()} | {:error, String.t()}
+  @spec create_jsapi_transaction(atom(), map(), keyword()) :: {:ok, map()} | {:error, String.t()}
   def create_jsapi_transaction(pid, attrs, opts \\ []) do
     GenServer.call(pid, {:create_jsapi_transaction, attrs, opts})
   end
@@ -107,7 +107,7 @@ defmodule Sonnam.WechatPay do
   )
   {:ok, %{"code_url" => "weixin://wxpay/bizpayurl?pr=A9ceSdqzk"}}
   """
-  @spec create_native_transaction(pid(), map(), keyword()) :: {:ok, map()} | {:error, String.t()}
+  @spec create_native_transaction(atom(), map(), keyword()) :: {:ok, map()} | {:error, String.t()}
   def create_native_transaction(pid, attrs, opts \\ []) do
     GenServer.call(pid, {:create_native_transaction, attrs, opts})
   end
@@ -128,7 +128,7 @@ defmodule Sonnam.WechatPay do
     "timeStamp" => 1624844734
   }
   """
-  @spec miniapp_payform(pid(), String.t()) :: map()
+  @spec miniapp_payform(atom(), String.t()) :: map()
   def miniapp_payform(pid, prepay_id) do
     GenServer.call(pid, {:miniapp_payform, prepay_id})
   end
