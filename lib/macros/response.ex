@@ -1,19 +1,27 @@
 defmodule Sonnam.Macros.Response do
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
+    log_resp = Access.get(opts, :log_resp, false)
+
     quote do
-      import Sonnam.Macros.Response
-    end
-  end
+      require Logger
+      @log_resp unquote(log_resp)
 
-  defmacro reply_succ(conn, data \\ "success") do
-    quote bind_quoted: [conn: conn, data: data] do
-      json(conn, %{code: 200, data: data})
-    end
-  end
+      def reply_succ(conn, data \\ "success") do
+        @log_resp
+        |> if do
+          Logger.info("succ => #{inspect(data)}")
+        end
 
-  defmacro reply_err(conn, msg \\ "Internal server error", code \\ 500) do
-    quote bind_quoted: [conn: conn, msg: msg, code: code] do
-      json(conn, %{code: code, msg: msg})
+        json(conn, %{code: 200, data: data})
+      end
+
+      def reply_err(conn, msg \\ "internal server error", code \\ 500) do
+        Logger.error("failed => #{msg}")
+
+        conn
+        |> put_status(500)
+        |> json(%{code: code, msg: msg})
+      end
     end
   end
 end
