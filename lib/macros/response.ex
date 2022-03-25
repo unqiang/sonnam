@@ -15,7 +15,9 @@ defmodule Sonnam.Macros.Response do
         json(conn, %{code: 200, data: data})
       end
 
-      def reply_err(conn, msg \\ "internal server error", code \\ 500) do
+      def reply_err(conn, msg \\ "Internal server error", code \\ 500)
+
+      def reply_err(conn, msg, code) do
         Logger.error("failed => #{msg}")
 
         conn
