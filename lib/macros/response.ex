@@ -21,7 +21,7 @@ defmodule Sonnam.Macros.Response do
         Logger.error("failed => #{msg}")
 
         conn
-        |> put_status(500)
+        |> put_status(code)
         |> json(%{code: code, msg: msg})
       end
     end
