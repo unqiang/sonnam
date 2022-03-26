@@ -1,16 +1,10 @@
 defmodule Sonnam.Macros.Response do
-  defmacro __using__(opts) do
-    log_resp = Access.get(opts, :log_resp, false)
-
+  defmacro __using__(_opts) do
     quote do
       require Logger
-      @log_resp unquote(log_resp)
 
       def reply_succ(conn, data \\ "success") do
-        @log_resp
-        |> if do
-          Logger.info("succ => #{inspect(data)}")
-        end
+        Logger.debug("succ => #{inspect(data)}")
 
         json(conn, %{code: 200, data: data})
       end
