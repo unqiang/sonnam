@@ -76,7 +76,7 @@ defmodule Sonnam.WechatPay do
 
   ## Examples
 
-  iex> create_jsapi_tranaction(:wechat, :wechat_pay,
+  iex> create_jsapi_tranaction(:wechat_pay,
       %{
         "out_trade_no" => "order_xxxx",
         "description" => "测试订单",
