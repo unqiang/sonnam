@@ -13,6 +13,7 @@ defmodule Sonnam.WechatPay do
   @type params :: map | keyword | [{binary, binary}] | any
   @type pem :: binary()
   @type serial_no :: String.t()
+  @type err_t :: {:err, term()}
 
   @type payment_opts :: [
           appid: String.t(),
@@ -76,7 +77,7 @@ defmodule Sonnam.WechatPay do
 
   ## Examples
 
-  iex> create_jsapi_tranaction(:wechat, :wechat_pay,
+  iex> create_jsapi_tranaction(:wechat_pay,
       %{
         "out_trade_no" => "order_xxxx",
         "description" => "测试订单",
@@ -110,6 +111,32 @@ defmodule Sonnam.WechatPay do
   @spec create_native_transaction(atom(), map(), keyword()) :: {:ok, map()} | {:error, String.t()}
   def create_native_transaction(pid, attrs, opts \\ []) do
     GenServer.call(pid, {:create_native_transaction, attrs, opts})
+  end
+
+  @doc """
+  Doc: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_9.shtml
+
+  ## Examples
+
+  iex> create_refund(
+    :wechat,
+    %{
+      "out_trade_no" => "order_xxxx",
+      "out_refund_no" => "refund_xxxx",
+      "reason" => "退款",
+      "amount" => %{
+        "refund" => 1,
+        "total" => 1,
+        "currency" => "CNY"
+      }
+    },
+    recv_timeout: 2000)
+  {:ok, return_value}
+  """
+  @spec create_refund(atom | pid | {atom, any} | {:via, atom, any}, map(), keyword()) ::
+          {:ok, map()} | err_t()
+  def create_refund(pid, attrs, opts \\ []) do
+    GenServer.call(pid, {:create_refund, attrs, opts})
   end
 
   @doc """

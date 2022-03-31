@@ -10,7 +10,7 @@ defmodule Sonnam.Wechat.Miniapp do
   end
 
   defmodule MyAppB do
-    
+
     IO.inspect(MyAppA.config())
   end
   ```
@@ -151,6 +151,9 @@ defmodule Sonnam.Wechat.Miniapp do
         end
       end
 
+      @doc """
+      https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+      """
       @spec subscribe_send(String.t(), String.t(), String.t(), %{atom() => any()}, keyword()) ::
               {:ok, term()} | err_t()
       def subscribe_send(token, touser, template_id, data, opts) do
@@ -221,6 +224,23 @@ defmodule Sonnam.Wechat.Miniapp do
         else
           reason ->
             Logger.error("send uniform msg failed: #{inspect(reason)}")
+            {:error, "Internal server error"}
+        end
+      end
+
+      @doc """
+      https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/phonenumber/phonenumber.getPhoneNumber.html
+      """
+      @spec get_phonenumber(String.t(), String.t()) :: {:ok, term()} | err_t()
+      def get_phonenumber(token, code) do
+        with url <- "#{@service_addr}/wxa/business/getuserphonenumber?access_token=#{token}",
+             payload <- %{"code" => code},
+             {:ok, body} <- Jason.encode(payload),
+             {:ok, response} <- HTTPoison.post(url, body) do
+          process_response(response)
+        else
+          reason ->
+            Logger.error("get phonenumber failed: #{inspect(reason)}")
             {:error, "Internal server error"}
         end
       end
