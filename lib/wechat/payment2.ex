@@ -248,12 +248,12 @@ defmodule Sonnam.WechatPayV2 do
               list()
             ) ::
               {:ok, any()} | err_t()
-      defp request(cli, api, method, params, attrs, headers \\ [], opts \\ [recv_timeout: 2000])
+      defp request(cli, api, method, query, params, headers \\ [], opts \\ [recv_timeout: 2000])
 
-      defp request(cli, api, method, params, attrs, headers, opts) do
+      defp request(cli, api, method, query, params, headers, opts) do
         with ts <- timestamp(),
              nonce_str <- random_string(12),
-             signature <- sign(method, api, attrs, nonce_str, ts, cli[:client_key]),
+             signature <- sign(method, api, params, nonce_str, ts, cli[:client_key]),
              auth <-
                "mchid=\"#{cli[:mchid]}\",nonce_str=\"#{nonce_str}\",timestamp=\"#{ts}\",serial_no=\"#{cli[:client_serial_no]}\",signature=\"#{signature}\"",
              full_headers <- [
@@ -266,8 +266,8 @@ defmodule Sonnam.WechatPayV2 do
                method: method,
                url: gen_uri(api),
                headers: full_headers,
-               body: Jason.encode!(attrs),
-               params: params,
+               body: Jason.encode!(params),
+               params: query,
                options: opts
              },
              {:ok, %HTTPoison.Response{body: body, status_code: 200, headers: headers}} <-
