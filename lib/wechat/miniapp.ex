@@ -10,7 +10,6 @@ defmodule Sonnam.Wechat.Miniapp do
   end
 
   defmodule MyAppB do
-
     IO.inspect(MyAppA.config())
   end
   ```
@@ -34,23 +33,18 @@ defmodule Sonnam.Wechat.Miniapp do
           unquote(otp_app)
           |> Application.get_env(__MODULE__, [])
 
-      # |> Keyword.merge(unquote(opts))
-
       defp process_response(%HTTPoison.Response{status_code: 200, body: body}),
         do: Jason.decode(body)
 
       defp process_response(%HTTPoison.Response{status_code: code}),
         do: {:error, "service #{code}"}
 
-      # apply(__MODULE__, :get_miniapp_cfg, [])
-
-      # ------------- real part ------------
-
       @doc """
       https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
       """
       @spec get_access_token() ::
               {:ok, %{access_token: String.t(), expire_in: integer()}} | {:error, String.t()}
+      @deprecated "Use get_access_token_v2 instead"
       def get_access_token() do
         with [app_id: app_id, app_secret: app_secret] <- config(),
              url <-
@@ -73,8 +67,26 @@ defmodule Sonnam.Wechat.Miniapp do
       end
 
       @doc """
+      https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
+      """
+      @spec get_access_token_v2() ::
+              {:ok, map()} | {:error, String.t()}
+      def get_access_token_v2() do
+        with [app_id: app_id, app_secret: app_secret] <- config(),
+             {:ok, res} <-
+               do_req(:get, "/cgi-bin/token", "", "", %{
+                 "grant_type" => "client_credential",
+                 "appid" => app_id,
+                 "secret" => app_secret
+               }) do
+          Jason.decode(res)
+        end
+      end
+
+      @doc """
       https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
       """
+      @deprecated "use get_session_v2/1 instead"
       @spec get_session(String.t()) :: {:ok, session_info()} | {:error, String.t()}
       def get_session(code) do
         with [app_id: app_id, app_secret: app_secret] <- config(),
@@ -102,52 +114,40 @@ defmodule Sonnam.Wechat.Miniapp do
       end
 
       @doc """
+      https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+      """
+      @spec get_session_v2(String.t()) :: {:ok, map()} | err_t()
+      def get_session_v2(code) do
+        with [app_id: app_id, app_secret: app_secret] <- config(),
+             {:ok, res} <-
+               do_req(:get, "/sns/jscode2session", "", "", %{
+                 "appid" => app_id,
+                 "secret" => app_secret,
+                 "js_code" => code,
+                 "grant_type" => "authorization_code"
+               }) do
+          Jason.decode(res)
+        end
+      end
+
+      @doc """
       https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/qr-code/wxacode.getUnlimited.html
       """
-      @spec get_unlimited_wxacode(String.t(), keyword()) :: {:ok, iodata()} | {:error, String.t()}
-      def get_unlimited_wxacode(token, opts) do
-        with url <- "#{@service_addr}/wxa/getwxacodeunlimit?access_token=#{token}",
-             payload <- %{
-               scene: Keyword.get(opts, :scene),
-               page: Keyword.get(opts, :page),
-               width: Keyword.get(opts, :width),
-               auto_color: Keyword.get(opts, :auto_color),
-               line_color: Keyword.get(opts, :line_color),
-               is_hyaline: Keyword.get(opts, :hyaline)
-             },
-             {:ok, body} <- Jason.encode(payload),
-             {:ok, response} <- HTTPoison.post(url, body),
-             %HTTPoison.Response{status_code: 200, body: image} <- response do
-          {:ok, image}
-        else
-          reason ->
-            Logger.error("get_unlimited_wxacode error: #{inspect(reason)}")
-            {:error, "Internal server error"}
-        end
+      @spec get_unlimited_wxacode(String.t(), %{String.t() => any()}) ::
+              {:ok, iodata()} | {:error, String.t()}
+      def get_unlimited_wxacode(token, payload) do
+        with {:ok, body} <- Jason.encode(payload),
+             do: do_req(:post, "/wxa/getwxacodeunlimit", token, body)
       end
 
       @doc """
       https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/url-link/urllink.generate.html
       """
-      @spec get_urllink(String.t(), keyword()) :: {:ok, map()} | err_t()
-      def get_urllink(token, opts) do
-        with url <- "#{@service_addr}/wxa/generate_urllink?access_token=#{token}",
-             payload <- %{
-               path: Keyword.get(opts, :path),
-               query: Keyword.get(opts, :query),
-               env_version: Keyword.get(opts, :env_version),
-               is_expire: Keyword.get(opts, :is_expire),
-               expire_type: Keyword.get(opts, :expire_type),
-               expire_time: Keyword.get(opts, :expire_time),
-               expire_interval: Keyword.get(opts, :expire_interval)
-             },
-             {:ok, body} <- Jason.encode(payload),
-             {:ok, response} <- HTTPoison.post(url, body) do
-          process_response(response)
-        else
-          reason ->
-            Logger.error("get_urllink error: #{inspect(reason)}")
-            {:error, "Internal server error"}
+      @spec get_urllink(String.t(), %{String.t() => any()}) :: {:ok, map()} | err_t()
+      def get_urllink(token, payload) do
+        with {:ok, body} <- Jason.encode(payload),
+             {:ok, res} <- do_req(:post, "/wxa/generate_urllink", token, body) do
+          Jason.decode(res)
         end
       end
 
@@ -156,6 +156,7 @@ defmodule Sonnam.Wechat.Miniapp do
       """
       @spec subscribe_send(String.t(), String.t(), String.t(), %{atom() => any()}, keyword()) ::
               {:ok, term()} | err_t()
+      @deprecated "use subscribe_send_v2/0 instead"
       def subscribe_send(token, touser, template_id, data, opts) do
         with url <- "#{@service_addr}/cgi-bin/message/subscribe/send?access_token=#{token}",
              payload <- %{
@@ -173,6 +174,18 @@ defmodule Sonnam.Wechat.Miniapp do
           reason ->
             Logger.error("send subscribe message failed: #{inspect(reason)}")
             {:error, "Internal server error"}
+        end
+      end
+
+      @doc """
+      https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+      """
+      @spec subscribe_send_v2(String.t(), %{String.t() => any()}) ::
+              {:ok, term()} | err_t()
+      def subscribe_send_v2(token, payload) do
+        with {:ok, body} <- Jason.encode(payload),
+             {:ok, res} <- do_req(:post, "/cgi-bin/message/subscribe/send", token, body) do
+          Jason.decode(res)
         end
       end
 
@@ -205,6 +218,7 @@ defmodule Sonnam.Wechat.Miniapp do
               mp_appid: String.t(),
               mini_appid: String.t()
             ) :: {:ok, term()} | err_t()
+      @deprecated "use uniform_send/2 instead"
       def uniform_send(token, touser, template_id, data, opt) do
         with url <-
                "#{@service_addr}/cgi-bin/message/wxopen/template/uniform_send?access_token=#{token}",
@@ -229,20 +243,69 @@ defmodule Sonnam.Wechat.Miniapp do
       end
 
       @doc """
+      https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/uniform-message/uniformMessage.send.html
+      """
+      @spec uniform_send_v2(String.t(), %{String.t() => any()}) :: {:ok, term()} | err_t()
+      def uniform_send_v2(token, payload) do
+        with {:ok, body} <- Jason.encode(payload),
+             {:ok, res} <-
+               do_req(:post, "/cgi-bin/message/wxopen/template/uniform_send", token, body),
+             do: Jason.decode(res)
+      end
+
+      @doc """
       https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/phonenumber/phonenumber.getPhoneNumber.html
       """
       @spec get_phonenumber(String.t(), String.t()) :: {:ok, term()} | err_t()
       def get_phonenumber(token, code) do
-        with url <- "#{@service_addr}/wxa/business/getuserphonenumber?access_token=#{token}",
-             payload <- %{"code" => code},
-             {:ok, body} <- Jason.encode(payload),
-             {:ok, response} <- HTTPoison.post(url, body) do
-          process_response(response)
+        with {:ok, body} <- Jason.encode(%{"code" => code}),
+             {:ok, res} <- do_req(:post, "/wxa/business/getuserphonenumber", token, body),
+             do: Jason.decode(res)
+      end
+
+      @spec do_req(
+              atom(),
+              String.t(),
+              String.t(),
+              binary,
+              %{String.t() => any()},
+              keyword()
+            ) :: {:ok, iodata()} | err_t()
+      defp do_req(method, api, token, body, query \\ %{}, opts \\ [recv_timeout: 2000])
+
+      defp do_req(method, api, token, body, query, opts) do
+        with url <- gen_uri(api),
+             params <- Map.merge(query, %{"access_token" => token}),
+             req <- %HTTPoison.Request{
+               method: method,
+               url: url,
+               headers: [{"Content-Type", "application/json"}],
+               body: body,
+               params: params,
+               options: opts
+             },
+             _ <- Logger.debug("call wx #{api} with req: #{body}"),
+             {:ok, %HTTPoison.Response{body: body, status_code: 200}} <-
+               HTTPoison.request(req) do
+          {:ok, body}
         else
-          reason ->
-            Logger.error("get phonenumber failed: #{inspect(reason)}")
-            {:error, "Internal server error"}
+          {:ok, %HTTPoison.Response{body: body}} ->
+            {:error, body}
+
+          {:error, error} ->
+            Logger.error("#{inspect(error)}")
+            {:error, "Interal server error"}
+
+          other_error ->
+            Logger.error("#{inspect(other_error)}")
+            {:error, "Interal server error"}
         end
+      end
+
+      defp gen_uri(api) do
+        @service_addr
+        |> URI.merge(api)
+        |> to_string()
       end
     end
   end
