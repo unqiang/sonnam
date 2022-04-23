@@ -1,5 +1,6 @@
 defmodule Sonnam.Utils.PipeUtil do
   @moduledoc false
+  @deprecated "use Sonnam.Macros.OK instead"
 
   defmodule MalformedReturnValueError do
     defexception [:message]
