@@ -152,6 +152,18 @@ defmodule Sonnam.Wechat.Miniapp do
       end
 
       @doc """
+      https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/url-scheme/urlscheme.generate.html
+      """
+      @spec generate_scheme(token :: String.t(), payload :: %{String.t() => any()}) ::
+              {:ok, map()} | err_t()
+      def generate_scheme(token, payload) do
+        with {:ok, body} <- Jason.encode(payload),
+             {:ok, res} <- do_req(:post, "/wxa/generatescheme", token, body) do
+          Jason.decode(res)
+        end
+      end
+
+      @doc """
       https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
       """
       @spec subscribe_send(String.t(), String.t(), String.t(), %{atom() => any()}, keyword()) ::
