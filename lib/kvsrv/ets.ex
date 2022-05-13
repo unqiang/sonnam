@@ -7,6 +7,7 @@ defmodule Sonnam.Kvsrv.ETS do
 
     quote do
       use GenServer
+      require Logger
 
       @table unquote(name)
       @ttl unquote(ttl)
@@ -64,9 +65,21 @@ defmodule Sonnam.Kvsrv.ETS do
         end
       end
 
+      defp garbbage_collection() do
+        :ets.select_delete(@table, [{{:_, :_, :"$1"}, [{:<, :"$1", timestamp() - @ttl}], [true]}])
+      end
+
       def init(_) do
         table = :ets.new(@table, [:set, :public, :named_table, read_concurrency: true])
+        Process.send_after(self(), :gc, 600 * 1000)
         {:ok, table}
+      end
+
+      def handle_info(:gc, table) do
+        Logger.info("run ets garbbage collection")
+        Process.send_after(self(), :gc, 600 * 1000)
+        garbbage_collection()
+        {:noreply, table}
       end
 
       defp timestamp, do: DateTime.to_unix(DateTime.utc_now())
