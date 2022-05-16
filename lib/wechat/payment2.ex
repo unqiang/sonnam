@@ -178,6 +178,32 @@ defmodule Sonnam.WechatPayV2 do
       end
 
       @doc """
+      Doc: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_3_1.shtml
+
+      iex> create_h5_transaction(%{
+              "out_trade_no" => "order_1102",
+              "description" => "测试订单",
+              "amount" => %{"total" => 1},
+              "scene_info" => %{"payer_client_ip" => "127.0.0.1"}
+            },
+            recv_timeout: 2000
+      )
+      {:ok, %{"ht_url" => "https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?prepay_id=wx2916263004719461949c84457c735b0000&package=2150917749"}}
+      """
+      @spec create_h5_transaction(%{String.t() => any()}, keyword()) :: {:ok, map()} | err_t()
+      def create_h5_transaction(params, opts \\ []) do
+        with cli <- get_client(),
+             params <-
+               Map.merge(params, %{
+                 "appid" => cli[:appid],
+                 "mchid" => cli[:mchid],
+                 "notify_url" => cli[:notify_url]
+               }) do
+          request(cli, "/v3/pay/transactions/h5", :post, nil, params, [], opts)
+        end
+      end
+
+      @doc """
       Doc: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_2.shtml
 
       ## Examples
