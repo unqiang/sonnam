@@ -78,13 +78,12 @@ defmodule Sonnam.Kvsrv.ETS do
 
       def init(_) do
         table = :ets.new(@table, [:set, :public, :named_table, read_concurrency: true])
-        Process.send_after(self(), :gc, 600 * 1000)
+        :timer.send_interval(60_000, :prune)
         {:ok, table}
       end
 
-      def handle_info(:gc, table) do
+      def handle_info(:prune, table) do
         Logger.info("run ets garbbage collection")
-        Process.send_after(self(), :gc, 600 * 1000)
         garbbage_collection()
         {:noreply, table}
       end
