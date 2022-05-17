@@ -2,7 +2,6 @@ defmodule Sonnam.AliyunOss.Token do
   @moduledoc """
   阿里云OSS token生成
   """
-  import Sonnam.AliyunOss.Util, only: [sign: 2]
 
   alias Sonnam.AliyunOss.Client
 
@@ -33,7 +32,7 @@ defmodule Sonnam.AliyunOss.Token do
 
     signature =
       policy
-      |> sign(cli.access_key_secret)
+      |> do_sign(cli.access_key_secret)
 
     base64_callback_body =
       %{
@@ -55,5 +54,11 @@ defmodule Sonnam.AliyunOss.Token do
       "callback" => base64_callback_body
     }
     |> Jason.encode()
+  end
+
+  defp do_sign(string_to_sign, key) do
+    :hmac
+    |> :crypto.mac(:sha, key, string_to_sign)
+    |> Base.encode64()
   end
 end

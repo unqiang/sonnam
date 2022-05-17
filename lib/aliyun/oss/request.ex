@@ -29,7 +29,7 @@ defmodule Sonnam.AliyunOss.Request do
       |> Map.put_new_lazy("Content-Type", fn -> parse_content_type(req) end)
       |> Map.put_new_lazy("Content-MD5", fn -> calc_content_md5(req) end)
       |> Map.put_new_lazy("Content-Length", fn -> byte_size(req.body) end)
-      |> Map.put_new_lazy("Date", fn -> Sonnam.AliyunOss.Util.gmt_now() end)
+      |> Map.put_new_lazy("Date", fn -> gmt_now() end)
 
     Map.put(req, :headers, headers)
   end
@@ -59,7 +59,13 @@ defmodule Sonnam.AliyunOss.Request do
   def gen_signature(cli, req) do
     req
     |> string_to_sign()
-    |> Sonnam.AliyunOss.Util.sign(cli.access_key_secret)
+    |> do_sign(cli.access_key_secret)
+  end
+
+  defp do_sign(string_to_sign, key) do
+    :hmac
+    |> :crypto.mac(:sha, key <> "&", string_to_sign)
+    |> Base.encode64()
   end
 
   defp canonicalize_oss_headers(%{headers: headers}) do
@@ -137,5 +143,10 @@ defmodule Sonnam.AliyunOss.Request do
 
   defp calc_content_md5(%{body: body}) do
     :crypto.hash(:md5, body) |> Base.encode64()
+  end
+
+  defp gmt_now() do
+    {:ok, dt} = Sonnam.Utils.TimeUtil.now()
+    Calendar.strftime(dt, "%a, %d %b %Y %H:%M:%S GMT")
   end
 end
