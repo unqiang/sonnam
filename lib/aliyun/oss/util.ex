@@ -7,7 +7,8 @@ defmodule Sonnam.AliyunOss.Util do
   """
   @spec sign(String.t(), String.t()) :: String.t()
   def sign(string_to_sign, key) do
-    :crypto.mac(:hmac, :sha, key, string_to_sign)
+    :hmac
+    |> :crypto.mac(:sha, key, string_to_sign)
     |> Base.encode64()
   end
 
@@ -16,7 +17,9 @@ defmodule Sonnam.AliyunOss.Util do
   """
   @spec sign(String.t(), map(), String.t()) :: String.t()
   def sign(verb, params, key) do
-    sign(encode_request(verb, params), key)
+    verb
+    |> encode_request(params)
+    |> sign(key)
   end
 
   # ----------- encoder --------------
@@ -50,7 +53,6 @@ defmodule Sonnam.AliyunOss.Util do
     |> Enum.join("&")
     |> encode_string()
   end
-
 
   # ------------ time ------------
   @doc """
