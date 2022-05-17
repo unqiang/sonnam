@@ -17,12 +17,12 @@ defmodule Sonnam.Aliyun.Utils do
   def sign(verb, params, key) do
     verb
     |> encode_request(params)
-    |> do_sign(key)
+    |> do_sign(key <> "&")
   end
 
   defp do_sign(string_to_sign, key) do
     :hmac
-    |> :crypto.mac(:sha, key <> "&", string_to_sign)
+    |> :crypto.mac(:sha, key, string_to_sign)
     |> Base.encode64()
   end
 

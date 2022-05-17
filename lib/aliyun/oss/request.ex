@@ -64,7 +64,7 @@ defmodule Sonnam.AliyunOss.Request do
 
   defp do_sign(string_to_sign, key) do
     :hmac
-    |> :crypto.mac(:sha, key <> "&", string_to_sign)
+    |> :crypto.mac(:sha, key, string_to_sign)
     |> Base.encode64()
   end
 
