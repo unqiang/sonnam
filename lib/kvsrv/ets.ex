@@ -3,9 +3,9 @@ defmodule Sonnam.Kvsrv.ETS do
 
   @callback put(key :: String.t(), value :: term()) :: {:ok, non_neg_integer}
   @callback get(key :: String.t(), ttl :: non_neg_integer, delete_expired? :: boolean()) ::
-              {:ok, term()}
+              {:ok, term()} | :miss
   @callback resolve(key :: String.t(), resolver :: function, ttl :: non_neg_integer) ::
-              {:ok, term}
+              {:ok, term} | {:error, any}
   defmacro __using__(opts) do
     name = Keyword.get(opts, :name)
     ttl = Keyword.get(opts, :ttl, 300)
@@ -19,6 +19,8 @@ defmodule Sonnam.Kvsrv.ETS do
       @table unquote(name)
       @ttl unquote(ttl)
 
+      @type resolver_t :: (() -> {:ok, term()} | {:error, any()})
+
       def start_link(_) do
         GenServer.start_link(__MODULE__, %{})
       end
@@ -29,7 +31,8 @@ defmodule Sonnam.Kvsrv.ETS do
         {:ok, 1}
       end
 
-      @spec get(key :: term(), ttl :: integer, delete_expired? :: boolean) :: {:ok, term()}
+      @spec get(key :: term(), ttl :: integer, delete_expired? :: boolean) ::
+              {:ok, term()} | :miss
       def get(key, ttl \\ @ttl, delete_expired? \\ false) do
         :ets.lookup(@table, key)
         |> case do
@@ -43,11 +46,11 @@ defmodule Sonnam.Kvsrv.ETS do
                 delete(key)
               end
 
-              {:ok, nil}
+              :miss
             end
 
           _else ->
-            {:ok, nil}
+            :miss
         end
       end
 
@@ -56,12 +59,12 @@ defmodule Sonnam.Kvsrv.ETS do
         :ets.delete(@table, key)
       end
 
-      @spec resolve(key :: String.t(), resolver :: function, ttl :: non_neg_integer) ::
-              {:ok, term}
+      @spec resolve(key :: String.t(), resolver :: resolver_t(), ttl :: non_neg_integer) ::
+              {:ok, term} | {:error, any}
       def resolve(key, resolver, ttl \\ @ttl) when is_function(resolver, 0) do
         get(key, ttl, false)
         |> case do
-          {:ok, nil} ->
+          :miss ->
             with {:ok, res} <- resolver.() do
               put(key, res)
               {:ok, res}
