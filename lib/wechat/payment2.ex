@@ -178,6 +178,66 @@ defmodule Sonnam.WechatPayV2 do
       end
 
       @doc """
+      Doc: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_3_1.shtml
+
+      iex> create_h5_transaction(%{
+              "out_trade_no" => "order_1102",
+              "description" => "测试订单",
+              "amount" => %{"total" => 1},
+              "scene_info" => %{"payer_client_ip" => "127.0.0.1"}
+            },
+            recv_timeout: 2000
+      )
+      {:ok, %{"ht_url" => "https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb?prepay_id=wx2916263004719461949c84457c735b0000&package=2150917749"}}
+      """
+      @spec create_h5_transaction(%{String.t() => any()}, keyword()) :: {:ok, map()} | err_t()
+      def create_h5_transaction(params, opts \\ []) do
+        with cli <- get_client(),
+             params <-
+               Map.merge(params, %{
+                 "appid" => cli[:appid],
+                 "mchid" => cli[:mchid],
+                 "notify_url" => cli[:notify_url]
+               }) do
+          request(cli, "/v3/pay/transactions/h5", :post, nil, params, [], opts)
+        end
+      end
+
+      @doc """
+      Doc: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_2.shtml
+
+      ## Examples
+      iex> query_transaction("T64228334BNA1G3")
+      {:ok,
+      %{
+        "amount" => %{
+          "currency" => "CNY",
+          "payer_currency" => "CNY",
+          "payer_total" => 10,
+          "total" => 10
+        },
+        "appid" => "wx6296faa4dbb0ab3b",
+        "attach" => "",
+        "bank_type" => "OTHERS",
+        "mchid" => "1604124248",
+        "out_trade_no" => "T64228334BNA1G3",
+        "payer" => %{"openid" => "oxUt85U6N0G-7shznSjdqCnp03-Y"},
+        "promotion_detail" => [],
+        "success_time" => "2022-05-06T11:58:14+08:00",
+        "trade_state" => "SUCCESS",
+        "trade_state_desc" => "支付成功",
+        "trade_type" => "JSAPI",
+        "transaction_id" => "4200001430202205065075126954"
+      }}
+      """
+      @spec query_transaction(trade_no :: String.t(), opts :: keyword()) :: {:ok, map()} | err_t()
+      def query_transaction(trade_no, opts \\ []) do
+        cli = get_client()
+        api = "/v3/pay/transactions/out-trade-no/#{trade_no}"
+        request(cli, api, :get, %{"mchid" => cli[:mchid]}, nil, [], opts)
+      end
+
+      @doc """
       Doc: https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter3_4_9.shtml
 
       ## Examples
@@ -239,21 +299,21 @@ defmodule Sonnam.WechatPayV2 do
       end
 
       @spec request(
-              map(),
-              String.t(),
-              method(),
-              map() | keyword() | nil,
-              map(),
-              list(),
-              list()
+              cli :: map(),
+              api :: String.t(),
+              method :: method(),
+              query :: map() | keyword() | nil,
+              attrs :: map() | nil,
+              headers :: list(),
+              opts :: list()
             ) ::
               {:ok, any()} | err_t()
-      defp request(cli, api, method, query, params, headers \\ [], opts \\ [recv_timeout: 2000])
+      defp request(cli, api, method, query, attrs, headers \\ [], opts \\ [recv_timeout: 2000])
 
-      defp request(cli, api, method, query, params, headers, opts) do
+      defp request(cli, api, method, query, attrs, headers, opts) do
         with ts <- timestamp(),
              nonce_str <- random_string(12),
-             signature <- sign(method, api, params, nonce_str, ts, cli[:client_key]),
+             signature <- sign(method, api, query, attrs, nonce_str, ts, cli[:client_key]),
              auth <-
                "mchid=\"#{cli[:mchid]}\",nonce_str=\"#{nonce_str}\",timestamp=\"#{ts}\",serial_no=\"#{cli[:client_serial_no]}\",signature=\"#{signature}\"",
              full_headers <- [
@@ -266,7 +326,7 @@ defmodule Sonnam.WechatPayV2 do
                method: method,
                url: gen_uri(api),
                headers: full_headers,
-               body: Jason.encode!(params),
+               body: Jason.encode!(attrs),
                params: query,
                options: opts
              },
@@ -282,21 +342,31 @@ defmodule Sonnam.WechatPayV2 do
             {:error, msg}
 
           other_error ->
-            Logger.error("#{inspect(other_error)}")
+            Logger.error(%{"api" => api, "error" => inspect(other_error)})
             {:error, "Interal server error"}
         end
       end
 
-      defp sign(method, api, attrs, nonce_str, timestamp, client_key) do
+      defp sign(method, api, query, attrs, nonce_str, timestamp, client_key) do
         {http_method, body} =
           case method do
             :post -> {"POST", Jason.encode!(attrs)}
             :get -> {"GET", ""}
           end
 
-        string_to_sign = "#{http_method}\n#{api}\n#{timestamp}\n#{nonce_str}\n#{body}\n"
+        query_str =
+          query
+          |> is_nil()
+          |> if do
+            ""
+          else
+            "?" <> URI.encode_query(query)
+          end
 
-        Logger.debug("string to sign => #{string_to_sign}")
+        string_to_sign =
+          "#{http_method}\n#{api}#{query_str}\n#{timestamp}\n#{nonce_str}\n#{body}\n"
+
+        Logger.debug(%{"string2sign" => "#{string_to_sign}"})
 
         string_to_sign
         |> :public_key.sign(:sha256, client_key)
@@ -306,7 +376,7 @@ defmodule Sonnam.WechatPayV2 do
       defp sign_miniapp(appid, ts, nonce, package, client_key) do
         string_to_sign = "#{appid}\n#{ts}\n#{nonce}\n#{package}\n"
 
-        Logger.debug("string to sign => #{string_to_sign}")
+        Logger.debug(%{"string2sign" => "#{string_to_sign}"})
 
         string_to_sign
         |> :public_key.sign(:sha256, client_key)
@@ -328,7 +398,7 @@ defmodule Sonnam.WechatPayV2 do
           :public_key.verify(string_to_sign, :sha256, wx_signature, wx_pub_key)
         else
           reason ->
-            Logger.error("#{inspect(reason)}")
+            Logger.error(%{"body" => body, "error" => inspect(reason)})
             {:error, "wechat response verify error"}
         end
       end

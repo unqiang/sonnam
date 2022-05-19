@@ -4,19 +4,17 @@ defmodule Sonnam.Macros.Response do
       require Logger
 
       def reply_succ(conn, data \\ "success") do
-        Logger.debug("succ => #{inspect(data)}")
+        Logger.debug(%{"data" => inspect(data)})
 
         json(conn, %{code: 200, data: data})
       end
 
-      def reply_err(conn, msg \\ "Internal server error", code \\ 500)
+      def reply_err(conn, msg \\ "Internal server error", code \\ 400)
 
       def reply_err(conn, msg, code) do
-        Logger.error("failed => #{msg}")
+        Logger.error(%{"msg" => msg, "code" => code})
 
-        conn
-        |> put_status(code)
-        |> json(%{code: code, msg: msg})
+        json(conn, %{code: code, msg: msg})
       end
     end
   end
