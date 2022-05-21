@@ -29,7 +29,7 @@ defmodule Sonnam.UnkPayment do
 
       @type method :: :get | :post | :put | :patch | :delete | :options | :head
 
-      @gateway "https://api2.payunk.com/index/unifiedorder"
+      @gateway "https://api.payunk.com/index/unifiedorder"
 
       @spec config :: payment_cfg()
       def config,
