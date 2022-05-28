@@ -33,5 +33,6 @@ defmodule Sonnam.Guard do
   defguard not_empty(val) when val != "" and not is_nil(val)
 
   @spec is_empty(any) :: boolean
+  def is_empty(val) when is_list(val), do: Enum.count(val) == 0
   def is_empty(value), do: is_nil(value) or value == 0 or value == ""
 end
