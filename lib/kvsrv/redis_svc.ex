@@ -49,11 +49,12 @@ defmodule Sonnam.Kvsrv.RedisSvc do
 
   @impl NimblePool
   def handle_checkout(:checkout, _from, conn, pool_state) do
-    with {:ok, "PONG"} <- Redix.command(conn, ["PING"]) do
-      {:ok, conn, conn, pool_state}
-    else
-      _ -> {:remove, :closed, pool_state}
-    end
+    {:ok, conn, conn, pool_state}
+    # with {:ok, "PONG"} <- Redix.command(conn, ["PING"]) do
+    #   {:ok, conn, conn, pool_state}
+    # else
+    #   _ -> {:remove, :closed, pool_state}
+    # end
   end
 
   @impl NimblePool
