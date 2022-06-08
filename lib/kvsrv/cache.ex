@@ -1,7 +1,7 @@
 defmodule Sonnam.Kvsrv.Cache do
   @moduledoc """
   缓存框架
-  store: 实现了resolve方法的存储模块
+  store: 实现了Sonnam.Kvsrv.Store协议的存储模块
   mod: 实现了 set_dirty, get_dirty和get_source的模块
   """
 
@@ -14,7 +14,7 @@ defmodule Sonnam.Kvsrv.Cache do
     mod = Keyword.get(opts, :mod)
 
     quote do
-      @behaviour Sonnam.Macros.Cache
+      @behaviour Sonnam.Kvsrv.Cache
 
       @store unquote(store)
       @mod unquote(mod)
