@@ -1,11 +1,15 @@
-defmodule Sonnam.Kvsrv.ETS do
-  @moduledoc false
-
+defmodule Sonnam.Kvsrv.Store do
   @callback put(key :: String.t(), value :: term()) :: {:ok, non_neg_integer}
   @callback get(key :: String.t(), ttl :: non_neg_integer, delete_expired? :: boolean()) ::
               {:ok, term()} | :miss
+  @callback delete(key :: String.t()) :: boolean()
   @callback resolve(key :: String.t(), resolver :: function, ttl :: non_neg_integer) ::
               {:ok, term} | {:error, any}
+end
+
+defmodule Sonnam.Kvsrv.ETS do
+  @moduledoc false
+
   defmacro __using__(opts) do
     name = Keyword.get(opts, :name)
     ttl = Keyword.get(opts, :ttl, 300)
@@ -14,7 +18,7 @@ defmodule Sonnam.Kvsrv.ETS do
       use GenServer
       require Logger
 
-      @behaviour Sonnam.Kvsrv.ETS
+      @behaviour Sonnam.Kvsrv.Store
 
       @table unquote(name)
       @ttl unquote(ttl)
