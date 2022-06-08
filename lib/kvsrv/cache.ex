@@ -1,4 +1,4 @@
-defmodule Sonnam.Macros.Cache do
+defmodule Sonnam.Kvsrv.Cache do
   @moduledoc """
   缓存框架
   store: 实现了resolve方法的存储模块
