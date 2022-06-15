@@ -1,13 +1,7 @@
-defmodule Sonnam.Utils.CryptoUtil do
-  @moduledoc """
-  加密工具
-  """
-
+defmodule Sonnam.Crypto.Common do
+  @moduledoc false
   @doc """
   md5
-  """
-  @deprecated """
-  use Sonnam.Crypto module instead
   """
   @spec md5(String.t()) :: binary()
   def md5(plaintext), do: :crypto.hash(:md5, plaintext)
@@ -15,17 +9,11 @@ defmodule Sonnam.Utils.CryptoUtil do
   @doc """
   sha1
   """
-  @deprecated """
-  use Sonnam.Crypto module instead
-  """
   @spec sha(String.t()) :: binary()
   def sha(plaintext), do: :crypto.hash(:sha, plaintext)
 
   @doc """
   sha256
-  """
-  @deprecated """
-  use Sonnam.Crypto module instead
   """
   @spec sha256(String.t()) :: binary()
   def sha256(plaintext), do: :crypto.hash(:sha256, plaintext)
@@ -36,9 +24,6 @@ defmodule Sonnam.Utils.CryptoUtil do
 
   iex(17)> Common.Crypto.random_string 16
   "2jqDlUxDuOt-qyyZ"
-  """
-  @deprecated """
-  use Sonnam.Crypto module instead
   """
   @spec random_string(integer()) :: String.t()
   def random_string(length) do
@@ -55,9 +40,6 @@ defmodule Sonnam.Utils.CryptoUtil do
 
   iex> generate_id("H")
   "H68203790HX446F"
-  """
-  @deprecated """
-  use Sonnam.Crypto module instead
   """
   @spec generate_id(String.t()) :: String.t()
   def generate_id(prefix) do
@@ -80,36 +62,6 @@ defmodule Sonnam.Utils.CryptoUtil do
     |> Integer.to_string(36)
   end
 
-  #### ssl tools
-  defp decode_public(nil), do: nil
-
-  defp decode_public(pem) do
-    [{:Certificate, der_bin, :not_encrypted}] = :public_key.pem_decode(pem)
-    der_bin
-  end
-
-  defp decode_private(pem) do
-    [{type, der_bin, :not_encrypted}] = :public_key.pem_decode(pem)
-    {type, der_bin}
-  end
-
-  @spec load_ssl(Keyword.t()) :: [any()]
-  @deprecated """
-  use Sonnam.Crypto module instead
-  """
-  def load_ssl([]), do: []
-
-  def load_ssl(ssl) do
-    ssl = Enum.into(ssl, %{})
-
-    [
-      cacerts: ssl.ca_cert |> decode_public() |> List.wrap(),
-      cert: ssl.cert |> decode_public(),
-      key: ssl.key |> decode_private()
-    ]
-    |> Enum.reject(fn {_k, v} -> v == nil end)
-  end
-
   @doc """
   map按照key字典序列排列并用&链接，value为空串，map，list，非string的binary等不参与
 
@@ -126,9 +78,6 @@ defmodule Sonnam.Utils.CryptoUtil do
   "B=2&a=1"
   """
   @spec sort_and_concat(map()) :: String.t()
-  @deprecated """
-  use Sonnam.Crypto module instead
-  """
   def sort_and_concat(params, case_sensitive \\ false)
 
   def sort_and_concat(params, true) do

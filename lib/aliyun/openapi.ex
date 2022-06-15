@@ -32,7 +32,7 @@ defmodule Sonnam.Aliyun.Openapi do
           "Version" => version,
           "Format" => "json",
           "AccessKeyId" => cfg[:access_key_id],
-          "SignatureNonce" => Sonnam.Utils.CryptoUtil.random_string(12),
+          "SignatureNonce" => Sonnam.Crypto.Common.random_string(12),
           "Timestamp" => timestamp(),
           "SignatureMethod" => "HMAC-SHA1",
           "SignatureVersion" => "1.0"
