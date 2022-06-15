@@ -8,7 +8,7 @@ defmodule Sonnam.UnkPayment do
 
     quote do
       import Sonnam.Utils.TimeUtil, only: [china_now: 0, datetime_to_str: 1]
-      import Sonnam.Utils.CryptoUtil, only: [random_string: 1, sort_and_concat: 2]
+      import Sonnam.Crypto.Common, only: [random_string: 1, sort_and_concat: 2, md5: 1]
 
       require Logger
 
@@ -126,7 +126,7 @@ defmodule Sonnam.UnkPayment do
         string2sign = str_pre <> "&key=" <> cli.appkey
 
         string2sign
-        |> Sonnam.Utils.CryptoUtil.md5()
+        |> md5()
         |> Base.encode16()
       end
 

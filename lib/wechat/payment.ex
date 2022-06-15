@@ -7,7 +7,8 @@ defmodule Sonnam.WechatPay do
   require Logger
 
   import Sonnam.Utils.TimeUtil, only: [timestamp: 0]
-  import Sonnam.Utils.CryptoUtil, only: [random_string: 1]
+  import Sonnam.Crypto.Common, only: [random_string: 1]
+  import Sonnam.Crypto.SSL, only: [load_pem: 1]
 
   @type method :: :get | :post | :put | :patch | :delete | :options | :head
   @type params :: map | keyword | [{binary, binary}] | any
@@ -269,11 +270,6 @@ defmodule Sonnam.WechatPay do
   end
 
   # ------------- tool functions ----------------
-
-  defp load_pem(pem) do
-    [entry | _] = :public_key.pem_decode(pem)
-    :public_key.pem_entry_decode(entry)
-  end
 
   defp gen_uri(api) do
     @service_host
