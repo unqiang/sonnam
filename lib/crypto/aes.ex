@@ -1,22 +1,20 @@
-defmodule Sonnam.Crypto.AES do
+defmodule Sonnam.Crypto.AES128CBC do
   @moduledoc false
   @block_size 16
 
-  @type key :: <<_::16>>
+  @type key :: <<_::128>>
+  @type iv :: <<_::128>>
 
-  @spec encrypt(key(), binary) :: binary
-  def encrypt(secret_key, plaintext) do
-    # iv = :crypto.strong_rand_bytes(16)
-    iv = secret_key
+  @spec encrypt(binary, key(), iv()) :: binary
+  def encrypt(plaintext, secret_key, iv) do
     plaintext = pkcs5padding(plaintext, @block_size)
     encrypted_text = :crypto.crypto_one_time(:aes_128_cbc, secret_key, iv, plaintext, true)
     Base.encode64(encrypted_text)
   end
 
-  @spec decrypt(key(), binary) :: binary
-  def decrypt(secret_key, ciphertext) do
+  @spec decrypt(binary, key(), iv()) :: binary
+  def decrypt(ciphertext, secret_key, iv) do
     {:ok, ciphertext} = Base.decode64(ciphertext)
-    <<iv::binary-16, ciphertext::binary>> = ciphertext
     decrypted_text = :crypto.crypto_one_time(:aes_128_cbc, secret_key, iv, ciphertext, false)
     pkcs5unpad(decrypted_text)
   end
