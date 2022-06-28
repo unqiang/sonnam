@@ -5,6 +5,22 @@ defmodule Sonnam.Crypto.AES128CBC do
   @type key :: <<_::128>>
   @type iv :: <<_::128>>
 
+  @aes256gcm "AES256GCM" # Use AES 256 Bit Keys for Encryption.
+
+  def encrypt(plaintext) do
+    iv = :crypto.strong_rand_bytes(16)
+    key = :crypto.strong_rand_bytes(32)
+    # {ciphertext, tag} = :crypto.block_encrypt(:aes_gcm, key, iv, {@aad, plaintext, 16})
+    {ciphertext, _tag} = :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv,  to_string(plaintext), @aes256gcm , true)
+    # iv <> tag <> <<key_id::unsigned-big-integer-32>> <> ciphertext
+  end
+
+  def decrypt(ciphertext, tag) do
+    iv = :crypto.strong_rand_bytes(16)
+    key = :crypto.strong_rand_bytes(32)
+    :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, ciphertext, @aes256gcm , tag ,false)
+  end
+
   @spec encrypt(binary, key(), iv()) :: binary
   def encrypt(plaintext, secret_key, iv) do
     plaintext = pkcs5padding(plaintext, @block_size)
