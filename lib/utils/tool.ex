@@ -1,4 +1,4 @@
-defmodule Sonnam.Utils.Trace  do
+defmodule Sonnam.Utils.Tool  do
 
   def recon_memory(n \\10) do
     :recon.proc_count(:memory, n)
@@ -24,7 +24,6 @@ defmodule Sonnam.Utils.Trace  do
     |>ensure_pid()
   end
 
-
   # def gen_code(module)  do
   #   p = :code.which(module)
   #   {:ok,{_,[{:abstract_code,{_, ac}}]}} = :beam_lib.chunks(p,  [:abstract_code])
@@ -40,7 +39,4 @@ defmodule Sonnam.Utils.Trace  do
          :undefined
       end
   end
-
-
-
 end
