@@ -1,10 +1,10 @@
 defmodule Sonnam.Utils.Trace  do
 
-  def recon_memory(n) do
+  def recon_memory(n \\10) do
     :recon.proc_count(:memory, n)
   end
 
-  def recon_msq(n) do
+  def recon_msq(n \\10) do
     :recon.proc_count(:message_queue_len, n)
   end
 
@@ -23,6 +23,24 @@ defmodule Sonnam.Utils.Trace  do
     :erlang.binary_to_list(pid)
     |>ensure_pid()
   end
+
+
+  # def gen_code(module)  do
+  #   p = :code.which(module)
+  #   {:ok,{_,[{:abstract_code,{_, ac}}]}} = :beam_lib.chunks(p,  [:abstract_code])
+  #   IO.write(:erl_prettypr.format(:erl_syntax.form_list(ac)))
+  # end
+
+  #To get compile module_info information
+  def compile_info(module) do
+      try do
+        module.module_info()
+      rescue
+        ex ->
+         :undefined
+      end
+  end
+
 
 
 end
