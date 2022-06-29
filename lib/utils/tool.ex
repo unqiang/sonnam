@@ -35,8 +35,8 @@ defmodule Sonnam.Utils.Tool  do
       try do
         module.module_info()
       rescue
-        ex ->
-         :undefined
+        _undefined ->
+            IO.puts "undefined, please check module name for beam file"
       end
   end
 end
